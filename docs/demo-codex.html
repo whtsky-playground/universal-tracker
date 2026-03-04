@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>回本星象仪 · 实验 Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Orbitron:wght@500;700&family=ZCOOL+QingKe+HuangYou&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f4ec;
+  --bg2:#e7f4ff;
+  --bg3:#ffe9cf;
+  --ink:#17222d;
+  --ink-soft:#52606d;
+  --line:rgba(23,34,45,.12);
+  --teal:#15929f;
+  --gold:#d6902f;
+  --coral:#db5f46;
+  --panel:rgba(255,255,255,.64);
+}
+
+html,body{min-height:100%}
+body{
+  font-family:'Noto Sans SC',sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 700px at -20% -30%,#fdf5df 0%,transparent 70%),
+    radial-gradient(800px 600px at 120% -10%,#dff6ff 0%,transparent 70%),
+    linear-gradient(150deg,var(--bg) 0%,var(--bg2) 48%,var(--bg3) 100%);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  opacity:.24;
+  z-index:0;
+  background-image:
+    radial-gradient(circle at 16% 24%,rgba(255,255,255,.6) 1px,transparent 1.2px),
+    radial-gradient(circle at 74% 66%,rgba(255,255,255,.5) 1px,transparent 1.2px),
+    radial-gradient(circle at 55% 35%,rgba(255,255,255,.4) 1px,transparent 1.2px);
+  background-size:180px 180px,220px 220px,260px 260px;
+  animation:floatbg 28s linear infinite;
+}
+
+@keyframes floatbg{
+  from{transform:translateY(0)}
+  to{transform:translateY(-80px)}
+}
+
+.app{
+  position:relative;
+  z-index:1;
+  max-width:560px;
+  margin:0 auto;
+  padding:18px 12px 72px;
+  display:grid;
+  gap:14px;
+}
+
+.panel{
+  background:var(--panel);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:22px;
+  box-shadow:0 8px 32px rgba(23,34,45,.08);
+  overflow:hidden;
+}
+
+.reveal{
+  opacity:0;
+  transform:translateY(16px);
+  animation:rise .8s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.reveal:nth-child(2){animation-delay:.08s}
+.reveal:nth-child(3){animation-delay:.16s}
+.reveal:nth-child(4){animation-delay:.24s}
+.reveal:nth-child(5){animation-delay:.32s}
+@keyframes rise{
+  to{opacity:1;transform:translateY(0)}
+}
+
+.hero{
+  padding:20px 18px 16px;
+  border-radius:24px 40px 24px 24px;
+}
+.hero-kicker{
+  font:600 10px/1 'Orbitron',sans-serif;
+  letter-spacing:1.4px;
+  color:var(--ink-soft);
+  margin-bottom:10px;
+}
+.hero h1{
+  font:400 36px/1 'ZCOOL QingKe HuangYou','Noto Sans SC',sans-serif;
+  letter-spacing:1px;
+  margin-bottom:8px;
+}
+.hero p{
+  font-size:13px;
+  color:var(--ink-soft);
+  margin-bottom:14px;
+}
+.hero-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.chip{
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(255,255,255,.55);
+}
+.chip .k{
+  font-size:10px;
+  color:var(--ink-soft);
+  margin-bottom:4px;
+}
+.chip .v{
+  font:700 18px/1.05 'Orbitron','Noto Sans SC',sans-serif;
+  letter-spacing:.4px;
+}
+.chip .v.small{
+  font-size:14px;
+  font-family:'Noto Sans SC',sans-serif;
+}
+.pos{color:var(--teal)}
+.neg{color:var(--coral)}
+
+.section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 15px 10px;
+  border-bottom:1px solid rgba(23,34,45,.08);
+}
+.section-head h2{
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.4px;
+}
+.section-head .tag{
+  font:600 10px/1 'Orbitron',sans-serif;
+  color:var(--ink-soft);
+  letter-spacing:1px;
+}
+
+.observatory .body{padding:12px}
+.sky-wrap{
+  position:relative;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(23,34,45,.08);
+  background:
+    radial-gradient(120% 120% at 50% 30%,rgba(255,255,255,.9) 0%,rgba(224,244,255,.8) 48%,rgba(250,227,199,.85) 100%);
+}
+#sky{
+  width:100%;
+  height:360px;
+  display:block;
+  touch-action:none;
+}
+.focus-readout{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  pointer-events:none;
+}
+#focusDate{
+  font-size:11px;
+  color:var(--ink-soft);
+}
+#focusNet{
+  font:700 24px/1 'Orbitron','Noto Sans SC',sans-serif;
+}
+
+.controls{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:108px 1fr;
+  gap:10px;
+  align-items:center;
+}
+#playBtn{
+  border:none;
+  border-radius:12px;
+  padding:10px 8px;
+  font-size:12px;
+  font-weight:700;
+  color:#fff;
+  background:linear-gradient(135deg,#128396,#30b6b4);
+}
+#playBtn.active{
+  background:linear-gradient(135deg,#d8802a,#ecae48);
+}
+#visitSlider{
+  width:100%;
+  appearance:none;
+  height:8px;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(21,146,159,.35),rgba(219,95,70,.35));
+  outline:none;
+}
+#visitSlider::-webkit-slider-thumb{
+  appearance:none;
+  width:22px;height:22px;border-radius:50%;
+  border:2px solid #fff;
+  background:var(--ink);
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.hint{
+  margin-top:10px;
+  font-size:11px;
+  color:var(--ink-soft);
+}
+
+.story-cards{
+  padding:12px;
+  display:grid;
+  gap:8px;
+}
+.story-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  background:rgba(255,255,255,.58);
+}
+.story-card .title{
+  font-size:12px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+.story-card .text{
+  font-size:13px;
+  line-height:1.6;
+  color:#263746;
+}
+
+.day-log .body{padding:8px 12px 12px}
+.day-meta{
+  font-size:11px;
+  color:var(--ink-soft);
+}
+.item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:10px 8px;
+  border-bottom:1px solid rgba(23,34,45,.08);
+}
+.item:last-child{border-bottom:none}
+.item-left{
+  min-width:0;
+}
+.item-type{
+  font-size:10px;
+  color:var(--ink-soft);
+  margin-bottom:2px;
+}
+.item-name{
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.item-val{
+  flex-shrink:0;
+  font:700 14px/1 'Orbitron','Noto Sans SC',sans-serif;
+}
+
+.empty{
+  padding:30px 16px;
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:13px;
+}
+
+.foot{
+  text-align:center;
+  font-size:10px;
+  color:var(--ink-soft);
+  opacity:.75;
+  padding:8px 0;
+}
+
+@media (max-width:380px){
+  #sky{height:320px}
+  .hero h1{font-size:32px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<main class="app">
+  <section class="panel hero reveal">
+    <div class="hero-kicker">UNIVERSAL TRACKER · DEMO V2</div>
+    <h1>回本星象仪</h1>
+    <p>把每次入园变成一层轨道，把每条消费变成一颗星。你在看的不是报表，而是一张持续生长的个人星图。</p>
+    <div class="hero-grid">
+      <div class="chip">
+        <div class="k">累计净值</div>
+        <div class="v" id="kpiNet">¥0</div>
+      </div>
+      <div class="chip">
+        <div class="k">回本进度</div>
+        <div class="v" id="kpiProgress">0%</div>
+      </div>
+      <div class="chip">
+        <div class="k">轨道数量</div>
+        <div class="v" id="kpiVisits">0</div>
+      </div>
+      <div class="chip">
+        <div class="k">剧情预判</div>
+        <div class="v small" id="kpiForecast">等待起航</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel observatory reveal">
+    <div class="section-head">
+      <h2>轨道观测舱</h2>
+      <div class="tag" id="focusTag">轨道 #0</div>
+    </div>
+    <div class="body">
+      <div class="sky-wrap">
+        <canvas id="sky"></canvas>
+        <div class="focus-readout">
+          <div id="focusDate">-</div>
+          <div id="focusNet">¥0</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="playBtn" type="button">自动回放</button>
+        <input id="visitSlider" type="range" min="0" max="0" value="0" step="1">
+      </div>
+      <div class="hint">拖动画布或滑动轨道，观察故事如何一步步成型</div>
+    </div>
+  </section>
+
+  <section class="panel reveal">
+    <div class="section-head">
+      <h2>三幕叙事</h2>
+      <div class="tag">NARRATIVE</div>
+    </div>
+    <div class="story-cards" id="storyCards"></div>
+  </section>
+
+  <section class="panel day-log reveal">
+    <div class="section-head">
+      <h2>当日明细</h2>
+      <div class="day-meta" id="dayMeta">-</div>
+    </div>
+    <div class="body" id="dayItems"></div>
+  </section>
+
+  <footer class="foot" id="footerText">数据来自 Notion</footer>
+</main>
+
+<script>
+const COST=1688;
+const CARD_NAME='悠享年卡';
+const TYPE_ANGLE={
+  '🎢 入园':-75,
+  '🍔 餐饮':-8,
+  '🎁 商品折扣':58,
+  '🅿️ 停车':134,
+  '🎪 活动/福利':204,
+  '🏨 酒店折扣':278
+};
+
+const RAW_DATA=(typeof [{"name":"入园","date":"2026-02-08","type":"🎢 入园","original":300,"paid":0,"saved":300},{"name":"停车","date":"2026-02-08","type":"🅿️ 停车","original":50,"paid":50,"saved":0},{"name":"功夫熊猫吊杠","date":"2026-02-08","type":"🎪 活动/福利","original":40,"paid":40,"saved":0},{"name":"餐饮","date":"2026-02-08","type":"🍔 餐饮","original":40,"paid":40,"saved":0}]!=='undefined')?__DATA__:[];
+
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function signMoney(v){return(v>=0?'+¥':'-¥')+Math.abs(Math.round(v))}
+function plainMoney(v){return(v<0?'-':'')+'¥'+Math.abs(Math.round(v))}
+function pct(v){return Math.round(v*10)/10}
+function fmtDate(s){
+  const d=new Date(String(s)+'T00:00:00');
+  if(Number.isNaN(d.getTime()))return String(s||'-');
+  const w=['日','一','二','三','四','五','六'];
+  return`${d.getMonth()+1}月${d.getDate()}日 周${w[d.getDay()]}`;
+}
+function cleanType(t){return String(t||'').replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+\s*/,'')}
+function hash01(str){
+  let h=2166136261;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}
+  return (h>>>0)/4294967295;
+}
+function deg2rad(d){return d*Math.PI/180}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+
+function normalize(records){
+  if(!Array.isArray(records))return [];
+  return records.map((r,i)=>({
+    id:i,
+    date:String(r.date||''),
+    type:String(r.type||'其他'),
+    name:String(r.name||'未命名项目'),
+    saved:Math.max(0,num(r.saved)),
+    paid:Math.max(0,num(r.paid))
+  })).filter(r=>r.date);
+}
+
+const records=normalize(RAW_DATA);
+const visitMap=new Map();
+records.forEach(r=>{
+  if(!visitMap.has(r.date))visitMap.set(r.date,{date:r.date,items:[],saved:0,spent:0,net:0,cumNet:0});
+  const v=visitMap.get(r.date);
+  v.items.push(r);
+  if(r.type==='🎢 入园')v.saved+=r.saved;
+  else v.spent+=r.paid;
+});
+const visits=[...visitMap.values()].sort((a,b)=>a.date.localeCompare(b.date));
+let cum=0;
+visits.forEach(v=>{v.net=v.saved-v.spent;cum+=v.net;v.cumNet=cum});
+
+const totals={
+  saved:visits.reduce((s,v)=>s+v.saved,0),
+  spent:visits.reduce((s,v)=>s+v.spent,0),
+  net:visits.reduce((s,v)=>s+v.net,0),
+  visits:visits.length
+};
+totals.progress=totals.net<=0?0:Math.min(999,totals.net/COST*100);
+totals.avg=totals.visits?totals.net/totals.visits:0;
+const maxDailyAbs=Math.max(1,...visits.map(v=>Math.abs(v.net)));
+
+let currentIndex=Math.max(0,visits.length-1);
+let playTimer=null;
+let stars=[];
+let starsW=0,starsH=0;
+
+const dom={
+  kpiNet:document.getElementById('kpiNet'),
+  kpiProgress:document.getElementById('kpiProgress'),
+  kpiVisits:document.getElementById('kpiVisits'),
+  kpiForecast:document.getElementById('kpiForecast'),
+  focusTag:document.getElementById('focusTag'),
+  focusDate:document.getElementById('focusDate'),
+  focusNet:document.getElementById('focusNet'),
+  slider:document.getElementById('visitSlider'),
+  playBtn:document.getElementById('playBtn'),
+  storyCards:document.getElementById('storyCards'),
+  dayMeta:document.getElementById('dayMeta'),
+  dayItems:document.getElementById('dayItems'),
+  canvas:document.getElementById('sky'),
+  footerText:document.getElementById('footerText')
+};
+
+function updateKpi(){
+  dom.kpiNet.textContent=plainMoney(totals.net);
+  dom.kpiNet.className='v '+(totals.net>=0?'pos':'neg');
+  dom.kpiProgress.textContent=pct(totals.progress)+'%';
+  dom.kpiVisits.textContent=String(totals.visits);
+  if(totals.net>=COST){
+    dom.kpiForecast.textContent='已进入超额';
+    dom.kpiForecast.className='v small pos';
+  }else if(totals.avg>0){
+    const need=Math.ceil((COST-totals.net)/totals.avg);
+    dom.kpiForecast.textContent=`约再 ${need} 次`;
+    dom.kpiForecast.className='v small';
+  }else if(totals.visits===0){
+    dom.kpiForecast.textContent='等待起航';
+    dom.kpiForecast.className='v small';
+  }else{
+    dom.kpiForecast.textContent='轨迹需修正';
+    dom.kpiForecast.className='v small neg';
+  }
+}
+
+function renderStory(){
+  if(!visits.length){
+    dom.storyCards.innerHTML='<div class="empty">还没有可观测轨道，第一条记录会点亮故事。</div>';
+    return;
+  }
+  const first=visits[0];
+  const best=visits.reduce((a,b)=>a.net>b.net?a:b);
+  const latest=visits[visits.length-1];
+  const forecast=totals.net>=COST
+    ?`累计净值 ${plainMoney(totals.net)}，已经穿过回本线，后续每次入园都在放大利润。`
+    :totals.avg>0
+      ?`按当前均值推算，还需约 ${Math.ceil((COST-totals.net)/totals.avg)} 次入园可触达 ¥${COST}。`
+      :'目前净值偏低，接下来需要更高价值的入园日来改变轨道。';
+
+  dom.storyCards.innerHTML=[
+    {
+      t:'第一幕 · 点火',
+      c:`${fmtDate(first.date)}，轨道首次被点亮。那天净值 ${signMoney(first.net)}。`
+    },
+    {
+      t:'第二幕 · 峰值',
+      c:`表现最亮眼的是 ${fmtDate(best.date)}，单日净值 ${signMoney(best.net)}。`
+    },
+    {
+      t:'第三幕 · 现在',
+      c:`截至 ${fmtDate(latest.date)}，你已走到第 ${visits.length} 条轨道。${forecast}`
+    }
+  ].map(x=>`<article class="story-card"><div class="title">${x.t}</div><div class="text">${x.c}</div></article>`).join('');
+}
+
+function resizeCanvas(){
+  const rect=dom.canvas.getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  dom.canvas.width=Math.round(rect.width*dpr);
+  dom.canvas.height=Math.round(rect.height*dpr);
+  const ctx=dom.canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(rect.width!==starsW||rect.height!==starsH){
+    starsW=rect.width;starsH=rect.height;
+    stars=Array.from({length:110},(_,i)=>({
+      x:hash01('x'+i)*rect.width,
+      y:hash01('y'+i)*rect.height,
+      r:0.6+hash01('r'+i)*1.8,
+      a:.14+hash01('a'+i)*.46
+    }));
+  }
+}
+
+function drawSky(){
+  resizeCanvas();
+  const ctx=dom.canvas.getContext('2d');
+  const w=dom.canvas.clientWidth;
+  const h=dom.canvas.clientHeight;
+  const cx=w/2,cy=h/2;
+  ctx.clearRect(0,0,w,h);
+
+  const bg=ctx.createRadialGradient(cx,cy,24,cx,cy,Math.min(w,h)*.6);
+  bg.addColorStop(0,'rgba(255,255,255,.95)');
+  bg.addColorStop(.55,'rgba(219,242,255,.72)');
+  bg.addColorStop(1,'rgba(255,224,185,.75)');
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,w,h);
+
+  stars.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${s.a})`;
+    ctx.fill();
+  });
+
+  if(!visits.length){
+    ctx.fillStyle='rgba(23,34,45,.45)';
+    ctx.font="600 14px 'Noto Sans SC',sans-serif";
+    ctx.textAlign='center';
+    ctx.fillText('等待第一条数据点亮星图',cx,cy);
+    return;
+  }
+
+  const rings=Math.max(1,visits.length);
+  const ringSpan=Math.min(w,h)*.39;
+  const base=40;
+  const step=rings>1?(ringSpan-base)/(rings-1):0;
+
+  for(let i=0;i<rings;i++){
+    const v=visits[i];
+    const r=base+i*step;
+    const reached=i<=currentIndex;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle=reached?'rgba(23,34,45,.11)':'rgba(23,34,45,.05)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+
+    const ratio=clamp(Math.abs(v.net)/maxDailyAbs,0,1);
+    const sweep=Math.max(0.12,ratio)*Math.PI*2;
+    const start=-Math.PI/2;
+    const end=v.net>=0?start+sweep:start-sweep;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,start,end,v.net<0);
+    ctx.strokeStyle=v.net>=0?'rgba(21,146,159,.88)':'rgba(219,95,70,.88)';
+    ctx.lineWidth=reached?3:2;
+    ctx.stroke();
+
+    const nx=cx+Math.cos(end)*r;
+    const ny=cy+Math.sin(end)*r;
+    ctx.beginPath();
+    ctx.arc(nx,ny,reached?4:2.5,0,Math.PI*2);
+    ctx.fillStyle=v.net>=0?'#0f7f8a':'#c4523c';
+    ctx.fill();
+
+    if(i===currentIndex){
+      ctx.beginPath();
+      ctx.arc(nx,ny,10,0,Math.PI*2);
+      ctx.strokeStyle='rgba(214,145,47,.45)';
+      ctx.lineWidth=2;
+      ctx.stroke();
+    }
+  }
+
+  const selected=visits[currentIndex];
+  selected.items.forEach((item,idx)=>{
+    const baseDeg=TYPE_ANGLE[item.type];
+    const d=(typeof baseDeg==='number'?baseDeg:hash01(item.type)*360)+(hash01(item.name+idx)-.5)*28;
+    const a=deg2rad(d);
+    const amount=item.type==='🎢 入园'?item.saved:item.paid;
+    const rr=30+Math.min(130,amount*.2)+(hash01(item.date+item.name)-.5)*18;
+    const x=cx+Math.cos(a)*rr;
+    const y=cy+Math.sin(a)*rr;
+    const good=item.type==='🎢 入园';
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(x,y);
+    ctx.strokeStyle=good?'rgba(214,145,47,.24)':'rgba(219,95,70,.2)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x,y,2.5+Math.min(4,amount*.015),0,Math.PI*2);
+    ctx.fillStyle=good?'rgba(214,145,47,.85)':'rgba(219,95,70,.78)';
+    ctx.fill();
+  });
+
+  const core=ctx.createRadialGradient(cx,cy,6,cx,cy,48);
+  core.addColorStop(0,'rgba(255,255,255,.98)');
+  core.addColorStop(1,'rgba(255,255,255,.45)');
+  ctx.beginPath();
+  ctx.arc(cx,cy,48,0,Math.PI*2);
+  ctx.fillStyle=core;
+  ctx.fill();
+  ctx.strokeStyle='rgba(23,34,45,.16)';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+
+  ctx.fillStyle='rgba(23,34,45,.55)';
+  ctx.font="600 10px 'Noto Sans SC',sans-serif";
+  ctx.textAlign='center';
+  ctx.fillText('累计净值',cx,cy-7);
+  ctx.fillStyle=selected.cumNet>=0?'#0e7f8a':'#c4523c';
+  ctx.font="700 16px 'Orbitron','Noto Sans SC',sans-serif";
+  ctx.fillText(plainMoney(selected.cumNet),cx,cy+14);
+}
+
+function renderDay(){
+  if(!visits.length){
+    dom.focusTag.textContent='轨道 #0';
+    dom.focusDate.textContent='-';
+    dom.focusNet.textContent='¥0';
+    dom.dayMeta.textContent='-';
+    dom.dayItems.innerHTML='<div class="empty">暂无明细</div>';
+    drawSky();
+    return;
+  }
+  const v=visits[currentIndex];
+  dom.focusTag.textContent=`轨道 #${currentIndex+1}`;
+  dom.focusDate.textContent=fmtDate(v.date);
+  dom.focusNet.textContent=signMoney(v.net);
+  dom.focusNet.className=v.net>=0?'pos':'neg';
+  dom.dayMeta.textContent=`${v.items.length} 条 · 当日净值 ${signMoney(v.net)}`;
+  dom.dayItems.innerHTML=v.items.map(i=>{
+    const isSave=i.type==='🎢 入园';
+    const amount=isSave?i.saved:i.paid;
+    const cls=isSave?'pos':'neg';
+    const val=(isSave?'+¥':'-¥')+Math.round(amount);
+    return`<div class="item">
+      <div class="item-left">
+        <div class="item-type">${cleanType(i.type)||i.type}</div>
+        <div class="item-name">${i.name}</div>
+      </div>
+      <div class="item-val ${cls}">${val}</div>
+    </div>`;
+  }).join('');
+  drawSky();
+}
+
+function stopPlay(){
+  if(playTimer){clearInterval(playTimer);playTimer=null}
+  dom.playBtn.classList.remove('active');
+  dom.playBtn.textContent='自动回放';
+}
+function startPlay(){
+  if(visits.length<2)return;
+  stopPlay();
+  dom.playBtn.classList.add('active');
+  dom.playBtn.textContent='停止回放';
+  playTimer=setInterval(()=>{
+    currentIndex=(currentIndex+1)%visits.length;
+    dom.slider.value=String(currentIndex);
+    renderDay();
+  },1200);
+}
+
+function bind(){
+  dom.slider.addEventListener('input',e=>{
+    stopPlay();
+    currentIndex=Number(e.target.value)||0;
+    renderDay();
+  });
+  dom.playBtn.addEventListener('click',()=>{
+    if(playTimer)stopPlay();
+    else startPlay();
+  });
+
+  let downX=0,isDown=false;
+  dom.canvas.addEventListener('pointerdown',e=>{isDown=true;downX=e.clientX});
+  dom.canvas.addEventListener('pointerup',()=>{isDown=false});
+  dom.canvas.addEventListener('pointercancel',()=>{isDown=false});
+  dom.canvas.addEventListener('pointerleave',()=>{isDown=false});
+  dom.canvas.addEventListener('pointermove',e=>{
+    if(!isDown||visits.length<2)return;
+    const dx=e.clientX-downX;
+    if(Math.abs(dx)<26)return;
+    stopPlay();
+    const step=dx>0?-1:1;
+    currentIndex=clamp(currentIndex+step,0,visits.length-1);
+    dom.slider.value=String(currentIndex);
+    downX=e.clientX;
+    renderDay();
+  });
+
+  window.addEventListener('resize',()=>drawSky());
+}
+
+function init(){
+  updateKpi();
+  renderStory();
+  dom.slider.max=String(Math.max(0,visits.length-1));
+  dom.slider.value=String(currentIndex);
+  const now=new Date();
+  dom.footerText.textContent=`数据来自 Notion · ${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} · ${CARD_NAME}`;
+  bind();
+  renderDay();
+}
+
+init();
+</script>
+</body>
+</html>
