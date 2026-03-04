@@ -276,14 +276,8 @@ function render(records){
       }).join('')}
     </div>
 
-    <div class="refresh-row fi d4">
-      <button class="refresh-btn" onclick="loadData()">
-        <span class="ri">↻</span> 刷新数据
-      </button>
-    </div>
-
     <div class="ft fi d4">
-      数据来自 Notion · ${new Date().toLocaleDateString('zh-CN')} ${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
+      数据来自 Notion · 上次更新 ${new Date().toLocaleDateString('zh-CN')}
     </div>
   `;
 
@@ -297,33 +291,10 @@ function render(records){
   if(done) setTimeout(showConfetti, 800);
 }
 
-function showError(msg){
-  document.getElementById('app').innerHTML=`
-    <div class="hdr fi"><span class="icon">🎡</span><h1>环球影城年卡回本追踪</h1></div>
-    <div class="err fi d1">
-      <span class="ei">😵</span>
-      <div class="em">${msg}</div>
-      <button class="refresh-btn" onclick="loadData()" style="margin:0 auto">
-        <span class="ri">↻</span> 重试
-      </button>
-    </div>`;
-}
 
-async function loadData(){
-  const btn=document.querySelector('.refresh-btn');
-  if(btn) btn.classList.add('spinning');
-  try{
-    const res=await fetch('/api/data');
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data=await res.json();
-    if(data.error) throw new Error(data.error);
-    render(data);
-  }catch(e){
-    showError('数据加载失败：'+e.message);
-  }
-}
-
-loadData();
+// Data baked in at build time
+const DATA = __DATA__;
+render(DATA);
 </script>
 </body>
 </html>

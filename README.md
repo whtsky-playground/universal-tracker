@@ -4,14 +4,23 @@
 
 ## 架构
 
-- `src/index.html` — 前端（纯 HTML/CSS/JS）
-- `functions/api/data.js` — Cloudflare Pages Function（代理 Notion API）
+纯静态站，数据在构建时从 Notion 拉取并写入 HTML。部署到 Cloudflare Pages。
+
+- `src/index.html` — 模板（含 `__DATA__` 占位符）
+- `build.py` — 从 Notion 拉数据，替换占位符，输出到 `dist/`
+- `dist/index.html` — 构建产物（自动生成，不要手动编辑）
+
+## 构建
+
+```bash
+python3 build.py
+```
+
+需要 `~/clawd/secrets/notion.json` 里有 Notion API key。
 
 ## 部署
 
-1. Cloudflare Pages 连接此 repo
-2. 构建设置：Build output directory = `src`
-3. 环境变量：`NOTION_KEY` = Notion Integration API Key
+Cloudflare Pages：Build output directory = `dist`，Build command = `python3 build.py`
 
 ## 回本计算
 
