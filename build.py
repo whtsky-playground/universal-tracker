@@ -9,7 +9,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SECRETS_PATH = os.path.expanduser("~/clawd/secrets/notion.json")
 DS_ID = "9ac28a84-c975-4267-b29f-6baec463986a"
 TEMPLATE = os.path.join(SCRIPT_DIR, "src", "index.html")
-OUTPUT = os.path.join(SCRIPT_DIR, "dist", "index.html")
+OUTPUT = os.path.join(SCRIPT_DIR, "docs", "index.html")
 
 def fetch_notion_data():
     with open(SECRETS_PATH) as f:
