@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>环球影城 · 年卡回本</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#0a0a12;
+  --surface:rgba(255,255,255,0.03);
+  --surface2:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.06);
+  --text:#f0f0f5;--text2:#a0a0b8;--text3:#5a5a70;
+  --accent:#7c6cf0;--accent2:#b4a0ff;--accent3:#e0d4ff;
+  --green:#34d399;--green2:#6ee7b7;--green-dim:rgba(52,211,153,0.15);
+  --red:#f87171;--red2:#fca5a5;--red-dim:rgba(248,113,113,0.15);
+  --amber:#fbbf24;
+  --radius:16px;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans SC','Space Grotesk',-apple-system,system-ui,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* === CANVAS BACKGROUND — particle field === */
+#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* === NOISE TEXTURE OVERLAY === */
+body::before{
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:128px 128px;
+}
+
+/* === LAYOUT === */
+.container{
+  max-width:480px;margin:0 auto;padding:20px 16px 100px;
+  position:relative;z-index:2;
+}
+
+/* === SCROLL-REVEAL === */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* === TICKET HEADER === */
+.ticket{
+  position:relative;margin-bottom:32px;
+  background:linear-gradient(145deg,rgba(124,108,240,0.08),rgba(52,211,153,0.04));
+  border:1px solid var(--border);border-radius:24px;
+  overflow:visible;
+}
+.ticket::before{
+  content:'';position:absolute;inset:-1px;border-radius:24px;padding:1px;
+  background:linear-gradient(160deg,rgba(124,108,240,0.3),transparent 40%,transparent 60%,rgba(52,211,153,0.2));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+}
+/* Notch cutouts */
+.ticket::after{
+  content:'';position:absolute;left:-12px;right:-12px;top:50%;
+  height:24px;transform:translateY(-50%);pointer-events:none;
+  background:
+    radial-gradient(circle at 0% 50%,var(--bg) 11px,transparent 12px),
+    radial-gradient(circle at 100% 50%,var(--bg) 11px,transparent 12px);
+}
+.ticket-top{padding:28px 24px 20px;text-align:center;position:relative;z-index:1}
+.ticket-brand{
+  font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent2);margin-bottom:6px;opacity:.7;
+}
+.ticket-title{
+  font-size:22px;font-weight:900;letter-spacing:-0.5px;
+  background:linear-gradient(135deg,var(--text),var(--accent3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;
+}
+.ticket-sub{font-size:12px;color:var(--text3);font-weight:400}
+
+.ticket-divider{
+  border:none;border-top:1.5px dashed var(--border);
+  margin:0 24px;position:relative;z-index:2;
+}
+
+.ticket-bottom{padding:20px 24px 24px;position:relative;z-index:1}
+
+/* === GIANT PERCENTAGE === */
+.pct-display{text-align:center;margin-bottom:16px}
+.pct-num{
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-size:72px;font-weight:700;letter-spacing:-4px;line-height:1;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  position:relative;display:inline-block;
+}
+.pct-num.done{
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.pct-label{font-size:12px;color:var(--text3);font-weight:500;margin-top:4px}
+
+/* === RING PROGRESS === */
+.ring-wrap{display:flex;justify-content:center;margin-bottom:20px}
+.ring-container{position:relative;width:200px;height:200px}
+.ring-svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--surface2);stroke-width:6}
+.ring-fill{
+  fill:none;stroke-width:6;stroke-linecap:round;
+  stroke:url(#ringGrad);
+  transition:stroke-dashoffset 2s cubic-bezier(.16,1,.3,1);
+}
+.ring-fill.done{stroke:url(#ringGradGreen)}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-pct{
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-size:44px;font-weight:700;letter-spacing:-2px;line-height:1;
+}
+.ring-pct-suffix{font-size:18px;font-weight:500;opacity:.5}
+.ring-sublabel{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* === TRACK BAR (thin elegant) === */
+.track{margin-bottom:20px;padding:0 4px}
+.track-bar{
+  height:4px;border-radius:2px;
+  background:var(--surface2);
+  position:relative;overflow:hidden;
+}
+.track-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transition:width 2s cubic-bezier(.16,1,.3,1);
+  position:relative;
+}
+.track-fill.done{background:linear-gradient(90deg,var(--green),var(--green2))}
+.track-fill::after{
+  content:'';position:absolute;right:0;top:-3px;
+  width:10px;height:10px;border-radius:50%;
+  background:white;
+  box-shadow:0 0 12px var(--accent),0 0 4px var(--accent);
+}
+.track-fill.done::after{box-shadow:0 0 12px var(--green),0 0 4px var(--green)}
+.track-labels{display:flex;justify-content:space-between;margin-top:8px}
+.track-labels span{font-size:10px;color:var(--text3);font-weight:500}
+
+/* === STAT PILLS === */
+.stat-row{display:flex;gap:8px;margin-bottom:24px}
+.stat-pill{
+  flex:1;padding:14px 12px;text-align:center;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;position:relative;overflow:hidden;
+}
+.stat-pill::before{
+  content:'';position:absolute;inset:0;opacity:0;
+  transition:opacity .3s;
+}
+.stat-pill:nth-child(1)::before{background:var(--green-dim)}
+.stat-pill:nth-child(2)::before{background:var(--red-dim)}
+.stat-pill:nth-child(3)::before{background:rgba(124,108,240,0.1)}
+.stat-pill:hover::before{opacity:1}
+.stat-val{
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-size:20px;font-weight:700;letter-spacing:-0.5px;margin-bottom:2px;
+  position:relative;
+}
+.stat-val.g{color:var(--green)}.stat-val.r{color:var(--red)}.stat-val.a{color:var(--accent2)}
+.stat-lbl{font-size:10px;color:var(--text3);font-weight:500;position:relative}
+
+/* === NET VALUE DISPLAY === */
+.net-display{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;margin-bottom:16px;
+}
+.net-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:100px;
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-size:24px;font-weight:700;letter-spacing:-0.5px;
+}
+.net-badge.pos{background:var(--green-dim);color:var(--green)}
+.net-badge.neg{background:var(--red-dim);color:var(--red)}
+.net-arrow{font-size:14px}
+
+/* === SECTION CARDS === */
+.section{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:16px;overflow:hidden;
+  position:relative;
+}
+.section::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+}
+.section-head{
+  padding:16px 18px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.section-title{font-size:13px;font-weight:700;color:var(--text2);letter-spacing:.5px}
+.section-badge{
+  font-size:10px;font-weight:600;padding:3px 10px;
+  border-radius:100px;background:var(--surface2);color:var(--text3);
+}
+.section-body{padding:0 18px 18px}
+
+/* === TREND CHART with canvas === */
+.chart-canvas-wrap{position:relative;width:100%;height:180px;margin-bottom:8px}
+#trendCanvas{width:100%;height:100%;display:block}
+.chart-tooltip{
+  position:absolute;padding:6px 10px;
+  background:rgba(20,20,30,0.95);border:1px solid var(--border);
+  border-radius:8px;font-size:11px;font-weight:500;
+  pointer-events:none;opacity:0;transition:opacity .2s;
+  backdrop-filter:blur(10px);white-space:nowrap;z-index:10;
+}
+.chart-legend{display:flex;gap:16px;justify-content:center;margin-top:4px}
+.chart-legend span{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.chart-legend i{display:inline-block;width:8px;height:3px;border-radius:2px}
+
+/* === VISIT TIMELINE === */
+.visit-item{
+  padding:14px 0;border-bottom:1px solid var(--border);
+  position:relative;
+}
+.visit-item:last-child{border-bottom:none}
+.visit-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.visit-date{font-size:12px;font-weight:600;color:var(--text2)}
+.visit-net{
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-size:14px;font-weight:700;
+}
+.visit-net.pos{color:var(--green)}.visit-net.neg{color:var(--red)}
+.visit-bar-track{
+  height:24px;border-radius:6px;display:flex;gap:2px;
+  overflow:hidden;background:var(--surface2);
+}
+.visit-bar-seg{
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.9);
+  border-radius:5px;min-width:28px;
+  transition:flex-grow 1s cubic-bezier(.16,1,.3,1);
+}
+.visit-bar-seg.sv{background:linear-gradient(135deg,var(--green),var(--green2))}
+.visit-bar-seg.sp{background:linear-gradient(135deg,var(--red),var(--red2))}
+
+/* === SPENDING BREAKDOWN (HORIZONTAL BAR) === */
+.breakdown-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;
+}
+.breakdown-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0}
+.breakdown-info{flex:1;min-width:0}
+.breakdown-name{font-size:12px;font-weight:500;margin-bottom:4px}
+.breakdown-bar{height:4px;border-radius:2px;background:var(--surface2);overflow:hidden}
+.breakdown-bar-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.16,1,.3,1)}
+.breakdown-val{
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-size:12px;font-weight:600;flex-shrink:0;width:50px;text-align:right;
+}
+
+/* === DETAIL ROWS === */
+.detail-group{margin-bottom:12px}
+.detail-group:last-child{margin-bottom:0}
+.detail-date{
+  font-size:11px;font-weight:600;color:var(--text3);
+  padding:6px 0;display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid var(--border);margin-bottom:4px;
+}
+.detail-date-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.detail-date-net{
+  margin-left:auto;
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-weight:700;font-size:12px;
+}
+.detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0 7px 13px;
+}
+.detail-left{display:flex;align-items:center;gap:8px;min-width:0}
+.detail-icon{font-size:13px;width:20px;text-align:center;flex-shrink:0}
+.detail-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail-val{
+  font-family:'Space Grotesk','Noto Sans SC',sans-serif;
+  font-size:12px;font-weight:600;flex-shrink:0;
+}
+.detail-val.pos{color:var(--green)}.detail-val.neg{color:var(--red)}.detail-val.z{color:var(--text3)}
+
+/* === FOOTER === */
+.footer{
+  text-align:center;padding:32px 0 16px;
+  font-size:11px;color:var(--text3);opacity:.4;
+}
+
+/* === CONFETTI === */
+.confetti-box{position:fixed;inset:0;pointer-events:none;z-index:99;overflow:hidden}
+.cft{
+  position:absolute;top:-16px;
+  animation:cfall 3.5s cubic-bezier(.25,.46,.45,.94) forwards;
+}
+@keyframes cfall{
+  0%{transform:translateY(0) rotate(0) scale(1);opacity:1}
+  80%{opacity:1}
+  100%{transform:translateY(105vh) rotate(720deg) scale(.3);opacity:0}
+}
+
+/* === PULSE DOT for live feel === */
+.pulse-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--green);
+  display:inline-block;animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+/* === LOADING === */
+.loading{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;min-height:60vh;gap:16px;
+}
+.loading-ring{
+  width:40px;height:40px;border:3px solid var(--surface2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text3)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px}
+
+/* Mobile tap highlight */
+*{-webkit-tap-highlight-color:transparent}
+
+/* Animations */
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="container" id="app">
+  <div class="loading">
+    <div class="loading-ring"></div>
+    <div class="loading-text">加载中</div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// PARTICLE BACKGROUND
+// ============================================
+(function(){
+  const c=document.getElementById('bgCanvas');
+  const ctx=c.getContext('2d');
+  let W,H,particles=[];
+  const PARTICLE_COUNT=60;
+
+  function resize(){
+    W=c.width=window.innerWidth;
+    H=c.height=window.innerHeight;
+  }
+  window.addEventListener('resize',resize);
+  resize();
+
+  class Particle{
+    constructor(){this.reset()}
+    reset(){
+      this.x=Math.random()*W;
+      this.y=Math.random()*H;
+      this.vx=(Math.random()-.5)*.15;
+      this.vy=(Math.random()-.5)*.15;
+      this.r=Math.random()*1.5+.5;
+      this.alpha=Math.random()*.15+.03;
+      const hues=[260,280,160,170];
+      this.hue=hues[~~(Math.random()*hues.length)];
+    }
+    update(){
+      this.x+=this.vx;this.y+=this.vy;
+      if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset();
+    }
+    draw(){
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${this.hue},60%,70%,${this.alpha})`;
+      ctx.fill();
+    }
+  }
+
+  for(let i=0;i<PARTICLE_COUNT;i++)particles.push(new Particle());
+
+  function drawConnections(){
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x;
+        const dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(124,108,240,${.03*(1-dist/120)})`;
+          ctx.lineWidth=.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{p.update();p.draw()});
+    drawConnections();
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+// ============================================
+// APP
+// ============================================
+const COST=1688,NAME='悠享年卡';
+const ICONS={'🎢 入园':'🎢','🍔 餐饮':'🍔','🎁 商品折扣':'🎁','🅿️ 停车':'🅿️','🎪 活动/福利':'🎪','🏨 酒店折扣':'🏨'};
+const CAT_COLORS={
+  '🎢 入园':'var(--green)','🍔 餐饮':'#f97316','🎁 商品折扣':'#ec4899',
+  '🅿️ 停车':'#3b82f6','🎪 活动/福利':'#a855f7','🏨 酒店折扣':'#06b6d4'
+};
+
+function fmtDate(d){
+  const dt=new Date(d+'T00:00:00');
+  const w=['日','一','二','三','四','五','六'];
+  return`${dt.getMonth()+1}月${dt.getDate()}日 周${w[dt.getDay()]}`;
+}
+
+function fmtMoney(v){return v>=0?'+¥'+v:'-¥'+Math.abs(v)}
+
+function countUp(el,target,suffix='%',duration=1400){
+  const start=performance.now();
+  (function step(now){
+    const p=Math.min((now-start)/duration,1);
+    const ease=1-Math.pow(1-p,4);
+    el.textContent=(ease*target).toFixed(1)+suffix;
+    if(p<1)requestAnimationFrame(step);
+  })(start);
+}
+
+function countUpInt(el,target,prefix='¥',duration=1200){
+  const start=performance.now();
+  (function step(now){
+    const p=Math.min((now-start)/duration,1);
+    const ease=1-Math.pow(1-p,4);
+    el.textContent=prefix+Math.round(ease*target);
+    if(p<1)requestAnimationFrame(step);
+  })(start);
+}
+
+function confetti(){
+  const box=document.createElement('div');box.className='confetti-box';
+  const cols=['#7c6cf0','#b4a0ff','#34d399','#6ee7b7','#fbbf24','#f87171','#ec4899','#60a5fa','#fcd34d'];
+  for(let i=0;i<100;i++){
+    const c=document.createElement('div');c.className='cft';
+    const size=4+Math.random()*10;
+    const isCircle=Math.random()>.5;
+    c.style.cssText=`
+      left:${Math.random()*100}%;
+      width:${size}px;height:${isCircle?size:size*2.5}px;
+      background:${cols[~~(Math.random()*cols.length)]};
+      border-radius:${isCircle?'50%':'2px'};
+      animation-delay:${Math.random()*2.5}s;
+      animation-duration:${2.5+Math.random()*2}s;
+    `;
+    box.appendChild(c);
+  }
+  document.body.appendChild(box);
+  setTimeout(()=>box.remove(),6000);
+}
+
+// ============================================
+// TREND CHART (Canvas-based, interactive)
+// ============================================
+function drawTrendChart(canvas,visits,done){
+  const dpr=window.devicePixelRatio||1;
+  const rect=canvas.parentElement.getBoundingClientRect();
+  const W=rect.width,H=rect.height;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  const pad={t:24,r:12,b:32,l:42};
+  const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
+
+  const maxVal=Math.max(COST*1.15,...visits.map(v=>v.cumNet))*1.1;
+  const x=i=>pad.l+(visits.length===1?cW/2:i/(visits.length-1)*cW);
+  const y=v=>pad.t+cH-(v/maxVal)*cH;
+
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.lineWidth=1;
+  const gridSteps=4;
+  for(let i=0;i<=gridSteps;i++){
+    const gy=pad.t+(cH/gridSteps)*i;
+    ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(W-pad.r,gy);ctx.stroke();
+  }
+
+  // Goal line
+  const goalY=y(COST);
+  ctx.setLineDash([6,4]);
+  ctx.strokeStyle='rgba(255,255,255,0.1)';
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,goalY);ctx.lineTo(W-pad.r,goalY);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font='500 10px "Space Grotesk","Noto Sans SC",sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.25)';
+  ctx.textAlign='end';
+  ctx.fillText('¥'+COST+' 目标',W-pad.r,goalY-6);
+
+  // Y labels
+  ctx.textAlign='end';
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  for(let i=0;i<=gridSteps;i++){
+    const val=Math.round(maxVal*(1-i/gridSteps));
+    const gy=pad.t+(cH/gridSteps)*i;
+    ctx.fillText('¥'+val,pad.l-8,gy+3);
+  }
+
+  // X labels
+  ctx.textAlign='center';
+  visits.forEach((v,i)=>{
+    const dt=new Date(v.date+'T00:00:00');
+    ctx.fillText((dt.getMonth()+1)+'/'+dt.getDate(),x(i),H-6);
+  });
+
+  if(visits.length<2)return;
+
+  // Area gradient
+  const areaGrad=ctx.createLinearGradient(0,pad.t,0,pad.t+cH);
+  if(done){
+    areaGrad.addColorStop(0,'rgba(52,211,153,0.2)');
+    areaGrad.addColorStop(1,'rgba(52,211,153,0)');
+  }else{
+    areaGrad.addColorStop(0,'rgba(124,108,240,0.2)');
+    areaGrad.addColorStop(1,'rgba(124,108,240,0)');
+  }
+
+  // Smoothed curve using cardinal spline
+  function getCardinalPoints(pts,tension=0.3){
+    const cp=[];
+    for(let i=0;i<pts.length;i++){
+      const p0=pts[Math.max(0,i-1)];
+      const p1=pts[i];
+      const p2=pts[Math.min(pts.length-1,i+1)];
+      const p3=pts[Math.min(pts.length-1,i+2)];
+      cp.push({
+        cp1x:p1.x+(p2.x-p0.x)*tension/3,
+        cp1y:p1.y+(p2.y-p0.y)*tension/3,
+        cp2x:p2.x-(p3.x-p1.x)*tension/3,
+        cp2y:p2.y-(p3.y-p1.y)*tension/3,
+        x:p2.x,y:p2.y
+      });
+    }
+    return cp;
+  }
+
+  const pts=visits.map((v,i)=>({x:x(i),y:y(v.cumNet)}));
+  const cp=getCardinalPoints(pts);
+
+  // Draw area
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,y(0));
+  ctx.lineTo(pts[0].x,pts[0].y);
+  for(let i=0;i<cp.length-1;i++){
+    ctx.bezierCurveTo(cp[i].cp1x,cp[i].cp1y,cp[i].cp2x,cp[i].cp2y,cp[i].x,cp[i].y);
+  }
+  ctx.lineTo(pts[pts.length-1].x,y(0));
+  ctx.closePath();
+  ctx.fillStyle=areaGrad;
+  ctx.fill();
+
+  // Draw line
+  const lineGrad=ctx.createLinearGradient(pad.l,0,W-pad.r,0);
+  if(done){
+    lineGrad.addColorStop(0,'#34d399');lineGrad.addColorStop(1,'#6ee7b7');
+  }else{
+    lineGrad.addColorStop(0,'#7c6cf0');lineGrad.addColorStop(1,'#b4a0ff');
+  }
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=0;i<cp.length-1;i++){
+    ctx.bezierCurveTo(cp[i].cp1x,cp[i].cp1y,cp[i].cp2x,cp[i].cp2y,cp[i].x,cp[i].y);
+  }
+  ctx.strokeStyle=lineGrad;
+  ctx.lineWidth=2.5;
+  ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.stroke();
+
+  // Dots
+  pts.forEach((p,i)=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+    ctx.fillStyle=done?'#6ee7b7':'#b4a0ff';ctx.fill();
+    ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx.fillStyle='white';ctx.fill();
+  });
+
+  // Projection dashed line if not done
+  if(!done&&visits.length>=2){
+    const lastPt=pts[pts.length-1];
+    const avgPerVisit=visits[visits.length-1].cumNet/visits.length;
+    if(avgPerVisit>0){
+      const projVisits=Math.ceil(COST/avgPerVisit);
+      const projX=pad.l+(projVisits-1)/(projVisits-1)*cW;
+      const projEndX=Math.min(W-pad.r,lastPt.x+(W-pad.r-lastPt.x)*0.6);
+      const projEndY=y(Math.min(COST,maxVal*0.95));
+      ctx.setLineDash([4,4]);
+      ctx.strokeStyle=done?'rgba(52,211,153,0.3)':'rgba(124,108,240,0.3)';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(lastPt.x,lastPt.y);ctx.lineTo(projEndX,projEndY);ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  // Interactive tooltip
+  const tooltip=canvas.parentElement.querySelector('.chart-tooltip');
+  canvas.addEventListener('mousemove',e=>{
+    const br=canvas.getBoundingClientRect();
+    const mx=e.clientX-br.left;
+    let closest=-1,minD=Infinity;
+    pts.forEach((p,i)=>{const d=Math.abs(p.x-mx);if(d<minD){minD=d;closest=i}});
+    if(closest>=0&&minD<40){
+      const v=visits[closest];
+      const dt=new Date(v.date+'T00:00:00');
+      tooltip.innerHTML=`<span style="color:var(--text2)">${dt.getMonth()+1}/${dt.getDate()}</span> · <span style="color:${v.cumNet>=COST?'var(--green)':'var(--accent2)'}">¥${v.cumNet}</span>`;
+      tooltip.style.opacity='1';
+      tooltip.style.left=Math.min(Math.max(pts[closest].x-40,0),W-100)+'px';
+      tooltip.style.top=(pts[closest].y-36)+'px';
+    }else{
+      tooltip.style.opacity='0';
+    }
+  });
+  canvas.addEventListener('mouseleave',()=>{tooltip.style.opacity='0'});
+
+  // Touch support
+  canvas.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    const br=canvas.getBoundingClientRect();
+    const mx=e.touches[0].clientX-br.left;
+    let closest=-1,minD=Infinity;
+    pts.forEach((p,i)=>{const d=Math.abs(p.x-mx);if(d<minD){minD=d;closest=i}});
+    if(closest>=0&&minD<50){
+      const v=visits[closest];
+      const dt=new Date(v.date+'T00:00:00');
+      tooltip.innerHTML=`<span style="color:var(--text2)">${dt.getMonth()+1}/${dt.getDate()}</span> · <span style="color:${v.cumNet>=COST?'var(--green)':'var(--accent2)'}">¥${v.cumNet}</span>`;
+      tooltip.style.opacity='1';
+      tooltip.style.left=Math.min(Math.max(pts[closest].x-40,0),W-100)+'px';
+      tooltip.style.top=(pts[closest].y-36)+'px';
+    }
+  },{passive:false});
+  canvas.addEventListener('touchend',()=>{tooltip.style.opacity='0'});
+}
+
+// ============================================
+// SCROLL REVEAL
+// ============================================
+function initReveal(){
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}
+    });
+  },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+}
+
+// ============================================
+// RENDER
+// ============================================
+function render(records){
+  const entrySaved=records.filter(r=>r.type==='🎢 入园').reduce((s,r)=>s+r.saved,0);
+  const parkSpend=records.filter(r=>r.type!=='🎢 入园').reduce((s,r)=>s+r.paid,0);
+  const net=entrySaved-parkSpend;
+  const pct=Math.min(Math.max(net/COST*100,0),100);
+  const done=net>=COST;
+  const remaining=Math.max(COST-net,0);
+
+  // Visit aggregation
+  const visitMap={};
+  records.forEach(r=>{
+    if(!visitMap[r.date])visitMap[r.date]={date:r.date,saved:0,spent:0,items:[]};
+    if(r.type==='🎢 入园')visitMap[r.date].saved+=r.saved;
+    else visitMap[r.date].spent+=r.paid;
+    visitMap[r.date].items.push(r);
+  });
+  const visits=Object.values(visitMap).sort((a,b)=>a.date.localeCompare(b.date));
+  let cum=0;
+  visits.forEach(v=>{cum+=v.saved-v.spent;v.cumNet=cum;v.net=v.saved-v.spent});
+  const visitCount=visits.length;
+  const avgNet=visitCount>0?net/visitCount:0;
+  const needMore=avgNet>0?Math.ceil(remaining/avgNet):'∞';
+
+  // Category breakdown
+  const catMap={};
+  records.forEach(r=>{
+    const key=r.type;
+    if(!catMap[key])catMap[key]={type:key,saved:0,spent:0,count:0};
+    catMap[key].saved+=r.saved;catMap[key].spent+=r.paid;catMap[key].count++;
+  });
+  const cats=Object.values(catMap).sort((a,b)=>(b.saved+b.spent)-(a.saved+a.spent));
+  const maxCatVal=Math.max(...cats.map(c=>c.saved+c.spent));
+
+  // Ring circumference
+  const ringR=88;
+  const ringC=2*Math.PI*ringR;
+  const ringOffset=ringC*(1-pct/100);
+
+  const app=document.getElementById('app');
+  app.innerHTML=`
+    <!-- TICKET HEADER -->
+    <div class="ticket reveal" style="transition-delay:.05s">
+      <div class="ticket-top">
+        <div class="ticket-brand">Universal Studios Beijing</div>
+        <div class="ticket-title">年卡回本追踪器</div>
+        <div class="ticket-sub">${NAME} · ¥${COST}</div>
+      </div>
+
+      <hr class="ticket-divider">
+
+      <div class="ticket-bottom">
+        <!-- RING -->
+        <div class="ring-wrap">
+          <div class="ring-container">
+            <svg class="ring-svg" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="var(--accent)"/>
+                  <stop offset="100%" stop-color="var(--accent2)"/>
+                </linearGradient>
+                <linearGradient id="ringGradGreen" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="var(--green)"/>
+                  <stop offset="100%" stop-color="var(--green2)"/>
+                </linearGradient>
+              </defs>
+              <circle cx="100" cy="100" r="${ringR}" class="ring-bg"/>
+              <circle cx="100" cy="100" r="${ringR}" class="ring-fill ${done?'done':''}"
+                stroke-dasharray="${ringC}"
+                stroke-dashoffset="${ringC}"
+                id="ringFill"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-pct" id="ringPct">0.0<span class="ring-pct-suffix">%</span></div>
+              <div class="ring-sublabel">${done?'已回本':'回本进度'}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NET VALUE -->
+        <div class="net-display">
+          <div class="net-badge ${net>=0?'pos':'neg'}">
+            <span class="net-arrow">${net>=0?'↑':'↓'}</span>
+            <span id="netVal">¥0</span>
+          </div>
+        </div>
+
+        <!-- THIN TRACK BAR -->
+        <div class="track">
+          <div class="track-bar">
+            <div class="track-fill ${done?'done':''}" style="width:0%" id="trackFill"></div>
+          </div>
+          <div class="track-labels">
+            <span>¥0</span>
+            <span>${done?'已达成':'还差 ¥'+remaining}</span>
+            <span>¥${COST}</span>
+          </div>
+        </div>
+
+        <!-- STAT PILLS -->
+        <div class="stat-row">
+          <div class="stat-pill">
+            <div class="stat-val g" id="statSaved">¥0</div>
+            <div class="stat-lbl">门票节省</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-val r" id="statSpent">¥0</div>
+            <div class="stat-lbl">园内花费</div>
+          </div>
+          <div class="stat-pill">
+            <div class="stat-val a">${visitCount}<span style="font-size:12px;opacity:.6">次</span></div>
+            <div class="stat-lbl">入园次数</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${!done?`
+    <!-- PREDICTION -->
+    <div class="section reveal" style="transition-delay:.12s">
+      <div style="padding:16px 18px;display:flex;align-items:center;gap:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(124,108,240,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎯</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px">预计还需 <span style="color:var(--accent2);font-family:'Space Grotesk','Noto Sans SC',sans-serif;font-weight:700">${needMore}</span> 次入园即可回本</div>
+          <div style="font-size:11px;color:var(--text3)">每次平均净回 ¥${Math.round(avgNet)}</div>
+        </div>
+      </div>
+    </div>
+    `:`
+    <div class="section reveal" style="transition-delay:.12s">
+      <div style="padding:16px 18px;display:flex;align-items:center;gap:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎊</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px;color:var(--green)">恭喜，年卡已回本！</div>
+          <div style="font-size:11px;color:var(--text3)">共入园 ${visitCount} 次，每次平均净回 ¥${Math.round(avgNet)}</div>
+        </div>
+      </div>
+    </div>
+    `}
+
+    <!-- TREND CHART -->
+    ${visits.length>=2?`
+    <div class="section reveal" style="transition-delay:.18s">
+      <div class="section-head">
+        <div class="section-title">回本趋势</div>
+        <div class="section-badge"><span class="pulse-dot"></span> 进行中</div>
+      </div>
+      <div class="section-body">
+        <div class="chart-canvas-wrap">
+          <canvas id="trendCanvas"></canvas>
+          <div class="chart-tooltip"></div>
+        </div>
+        <div class="chart-legend">
+          <span><i style="background:linear-gradient(90deg,var(--accent),var(--accent2))"></i> 累计净值</span>
+          <span><i style="background:rgba(255,255,255,0.15);border:1px dashed rgba(255,255,255,0.2)"></i> 目标 ¥${COST}</span>
+        </div>
+      </div>
+    </div>
+    `:''}
+
+    <!-- VISIT BREAKDOWN -->
+    <div class="section reveal" style="transition-delay:.24s">
+      <div class="section-head">
+        <div class="section-title">每次入园</div>
+        <div class="section-badge">${visitCount} 次</div>
+      </div>
+      <div class="section-body">
+        ${visits.slice().reverse().map(v=>{
+          const total=v.saved+v.spent||1;
+          return`<div class="visit-item">
+            <div class="visit-header">
+              <span class="visit-date">${fmtDate(v.date)}</span>
+              <span class="visit-net ${v.net>=0?'pos':'neg'}">${v.net>=0?'+':''}¥${v.net}</span>
+            </div>
+            <div class="visit-bar-track">
+              <div class="visit-bar-seg sv" style="flex-grow:${v.saved/total}">+${v.saved}</div>
+              ${v.spent>0?`<div class="visit-bar-seg sp" style="flex-grow:${v.spent/total}">-${v.spent}</div>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- CATEGORY BREAKDOWN -->
+    <div class="section reveal" style="transition-delay:.3s">
+      <div class="section-head">
+        <div class="section-title">分类统计</div>
+      </div>
+      <div class="section-body">
+        ${cats.map(c=>{
+          const val=c.type==='🎢 入园'?c.saved:c.spent;
+          const color=CAT_COLORS[c.type]||'var(--accent)';
+          const icon=ICONS[c.type]||'📌';
+          const label=c.type.replace(/^[^\s]+\s/,'');
+          return`<div class="breakdown-item">
+            <div class="breakdown-icon">${icon}</div>
+            <div class="breakdown-info">
+              <div class="breakdown-name">${label}<span style="color:var(--text3);font-size:10px;margin-left:6px">×${c.count}</span></div>
+              <div class="breakdown-bar">
+                <div class="breakdown-bar-fill" style="width:0%;background:${color}" data-target="${val/maxCatVal*100}"></div>
+              </div>
+            </div>
+            <div class="breakdown-val" style="color:${c.type==='🎢 入园'?'var(--green)':'var(--red)'}">
+              ${c.type==='🎢 入园'?'+':'−'}¥${val}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- DETAIL LIST -->
+    <div class="section reveal" style="transition-delay:.36s">
+      <div class="section-head">
+        <div class="section-title">消费明细</div>
+        <div class="section-badge">${records.length} 条</div>
+      </div>
+      <div class="section-body">
+        ${Object.entries(visitMap).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,v])=>{
+          const dayNet=v.saved-v.spent;
+          return`<div class="detail-group">
+            <div class="detail-date">
+              <span class="detail-date-dot"></span>
+              ${fmtDate(date)}
+              <span class="detail-date-net" style="color:${dayNet>=0?'var(--green)':'var(--red)'}">
+                ${dayNet>=0?'+':''}¥${dayNet}
+              </span>
+            </div>
+            ${v.items.map(i=>{
+              const isE=i.type==='🎢 入园';
+              const disp=isE?'+¥'+i.saved:(i.paid>0?'-¥'+i.paid:'¥0');
+              const cls=isE&&i.saved>0?'pos':(i.paid>0?'neg':'z');
+              return`<div class="detail-row">
+                <div class="detail-left">
+                  <span class="detail-icon">${ICONS[i.type]||'📌'}</span>
+                  <span class="detail-name">${i.name}</span>
+                </div>
+                <span class="detail-val ${cls}">${disp}</span>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="footer reveal" style="transition-delay:.42s">
+      数据来自 Notion · ${new Date().toLocaleDateString('zh-CN')}
+    </div>
+  `;
+
+  // ============================================
+  // ANIMATIONS
+  // ============================================
+  initReveal();
+
+  // Ring animation
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const ring=document.getElementById('ringFill');
+    if(ring)ring.style.strokeDashoffset=ringOffset;
+    const track=document.getElementById('trackFill');
+    if(track)track.style.width=pct+'%';
+  }));
+
+  // Count-ups
+  const pctEl=document.getElementById('ringPct');
+  if(pctEl){
+    const suffix=pctEl.querySelector('.ring-pct-suffix');
+    countUp({set textContent(v){pctEl.childNodes[0].textContent=v.replace('%','');suffix&&(suffix.textContent='%')}},pct,'%',1600);
+    // Simpler: just animate the text
+    const start=performance.now();
+    (function step(now){
+      const p=Math.min((now-start)/1600,1);
+      const ease=1-Math.pow(1-p,4);
+      pctEl.childNodes[0].textContent=(ease*pct).toFixed(1);
+      if(p<1)requestAnimationFrame(step);
+    })(start);
+  }
+
+  const netEl=document.getElementById('netVal');
+  if(netEl)countUpInt(netEl,Math.abs(net),(net>=0?'¥':'-¥'),1400);
+
+  const savedEl=document.getElementById('statSaved');
+  if(savedEl)countUpInt(savedEl,entrySaved,'¥',1200);
+
+  const spentEl=document.getElementById('statSpent');
+  if(spentEl)countUpInt(spentEl,parkSpend,'¥',1200);
+
+  // Chart
+  if(visits.length>=2){
+    const trendCanvas=document.getElementById('trendCanvas');
+    if(trendCanvas){
+      setTimeout(()=>drawTrendChart(trendCanvas,visits,done),300);
+      let resizeTimer;
+      window.addEventListener('resize',()=>{
+        clearTimeout(resizeTimer);
+        resizeTimer=setTimeout(()=>drawTrendChart(trendCanvas,visits,done),200);
+      });
+    }
+  }
+
+  // Breakdown bar animation
+  setTimeout(()=>{
+    document.querySelectorAll('.breakdown-bar-fill').forEach(el=>{
+      el.style.width=el.dataset.target+'%';
+    });
+  },500);
+
+  // Confetti
+  if(done)setTimeout(confetti,1200);
+}
+
+const DATA=[{"name":"入园","date":"2026-02-08","type":"🎢 入园","original":300,"paid":0,"saved":300},{"name":"停车","date":"2026-02-08","type":"🅿️ 停车","original":50,"paid":50,"saved":0},{"name":"功夫熊猫吊杠","date":"2026-02-08","type":"🎪 活动/福利","original":40,"paid":40,"saved":0},{"name":"餐饮","date":"2026-02-08","type":"🍔 餐饮","original":40,"paid":40,"saved":0}];
+render(DATA);
+</script>
+</body>
+</html>
