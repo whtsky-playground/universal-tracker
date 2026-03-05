@@ -1,0 +1,26 @@
+你是一个顶级前端工程师兼设计师。
+
+Phase 1 — 三个创意总监各出了一份设计方案：
+- reviews/plan-claude.md
+- reviews/plan-codex.md
+- reviews/plan-gemini.md
+
+Phase 2 — 三个评审各自点评并提出了融合方案：
+- reviews/review-claude.md
+- reviews/review-codex.md
+- reviews/review-gemini.md
+
+当前上线版本：src/index.html
+
+你的任务：
+1. 读完所有 6 份文件 + 当前版本
+2. 从三份评审的融合方案里提取共识和最佳想法
+3. 直接改造 src/index.html，写出最终版本
+
+规则：
+- 单 HTML 文件，内联 CSS+JS，Google Fonts OK
+- 保持 __DATA__ 占位符
+- 中文 UI，移动端优先
+- 无 IntersectionObserver / 滚动触发动画
+- prefers-reduced-motion 支持
+- 改完确认文件完整可用

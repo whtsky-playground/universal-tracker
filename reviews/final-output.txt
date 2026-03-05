@@ -1,0 +1,46 @@
+Let me read the full file in sections.Now I have a thorough understanding of everything. Let me summarize the consensus across all 3 reviews:
+
+**Consensus across all 3 reviews:**
+1. **Hero: Switch to net profit after 100%** — all 3 agree `+¥582` > `130%`
+2. **Merge season-card + mini-tickets** into one compact overview block
+3. **Add achievement/stamp system** (lightweight 3x3 grid) for post-break-even engagement
+4. **Replace bidirectional flow chart** with simpler separated bar list
+5. **Stamp system expanded to 6 tiers** with Chinese achievement titles from Gemini
+6. **Keep Canvas chart**, just reduce annotations (BEST/WORST → hover only)
+7. **Visit cards: keep vertical, add month grouping**, BEST/WORST → border color not sticker
+8. **Footer: add next goal + achievement title**
+9. **Paper texture: reduce opacity 10%**
+10. **No IntersectionObserver** (explicit rule), no heavy 3D/metal effects
+11. **prefers-reduced-motion support** maintained
+
+Let me write the final version now.Let me verify the file is complete and well-formed.Wait, there are 2 occurrences of `__DATA__` — let me check that's correct (one should be the assignment, but I need to make sure there's only 1 functional placeholder).Good — one is a comment, one is the actual placeholder. The file is complete and well-formed.文件已完成。以下是最终版本的改动总结：
+
+## 融合方案落地清单
+
+### 三份评审的共识提取
+
+| 共识 | 来源 | 落地方式 |
+|------|------|---------|
+| 回本后 Hero 切换为净赚金额 | Claude提议, 三方共识 | `+¥582` 金色渐变, 不再显示 130% |
+| 合并 season-card + mini-tickets | Codex提议, Claude/Gemini认同 | 单一「赛季概览」区块：三列数据 + 进度条 + 里程碑日期 |
+| 新增成就印章墙 | Claude核心创意, 三方认同 | 3×3 网格, 9个可计算成就, 盖章动画 + 印泥质感 |
+| 6 档印章系统 | Claude架构 + Gemini中文文案 | ROOKIE → REGULAR → VETERAN → ALMOST THERE → BREAK EVEN → LEGEND |
+| 社交成就称号 | Gemini文案池 | Footer: 「初入江湖」→「传奇降临」 |
+| 资金流向改为分离式列表 | 三方共识(双向条太难读) | 节省/支出分组, 单向条形图 + emoji |
+| 图表减标注 | Codex提议 | BEST/WORST 改为 hover 显示, Y轴减至3档, 信息栏固定在图下 |
+| BEST/WORST 改侧边色条 | Codex提议 | 左侧 3.5px 金色/红色边框取代大贴纸 |
+| 纸纹降低不透明度 | Claude+Codex共识 | 0.35 → 0.28 |
+| Footer 增加下一目标 | Claude提议 | 从未达成成就中取第一个 |
+
+### 战报改进
+- 每张卡片增加心情 emoji（🤩😊😌😅💸）
+- 点击卡片展开当日明细（高度过渡动画）
+- 明细中显示累计进度 `¥1280 / ¥1688`
+- 按月份标签分组
+
+### 技术约束遵守
+- 单 HTML 文件, 内联 CSS+JS
+- `__DATA__` 占位符保留
+- 无 IntersectionObserver / 滚动触发
+- `prefers-reduced-motion` 完整支持（countUp 直显、confetti 不播、所有动画跳过）
+- 中文 UI, 移动端优先

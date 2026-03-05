@@ -13,6 +13,7 @@
   --paper:#f5f0e4;
   --paper2:#ede7d9;
   --paper-warm:#faf6ec;
+  --card:#fffdf7;
   --ink:#1f2330;
   --ink2:#3a3d4a;
   --ink3:#6b6e7a;
@@ -26,12 +27,14 @@
   --gold:#d4920a;
   --gold-bright:#f0a81c;
   --gold-bg:rgba(212,146,10,0.08);
-  --gold-gradient:linear-gradient(135deg,#d4920a,#f0a81c);
+  --gold-gradient:linear-gradient(135deg,#c87f0a,#f0d060,#c87f0a);
   --blue:#3a7bd5;
-  --blue-bright:#4cc1ff;
   --stamp-red:#c0392b;
   --stamp-green:#1a8a55;
   --stamp-gold:#c87f0a;
+  --stamp-blue:#3a5ba0;
+  --stamp-purple:#6b21a8;
+  --stamp-orange:#b45309;
   --ink-handwrite:#2c3e50;
   --radius:12px;
   --font-num:'Bebas Neue','Noto Sans SC',sans-serif;
@@ -49,14 +52,14 @@ body{
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-/* === PAPER TEXTURE === */
+/* === PAPER TEXTURE (reduced opacity per consensus) === */
 body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.28;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size:200px 200px;
 }
 body::after{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.018;
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.014;
   background:repeating-linear-gradient(45deg,transparent,transparent 8px,var(--ink) 8px,var(--ink) 8.5px);
 }
 
@@ -69,7 +72,7 @@ body::after{
 /* === HERO TICKET === */
 .ticket{
   position:relative;
-  background:#fffdf7;
+  background:var(--card);
   border:1.5px solid rgba(0,0,0,.08);
   border-radius:20px;
   margin-bottom:16px;
@@ -122,7 +125,7 @@ body::after{
   position:relative;text-align:center;
 }
 
-/* Giant Percentage + Stamp Overlay */
+/* Giant Percentage / Profit Amount + Stamp Overlay */
 .hero-block{
   position:relative;display:inline-block;
   margin-bottom:6px;
@@ -132,11 +135,21 @@ body::after{
   font-size:96px;letter-spacing:-1px;line-height:.85;
   color:var(--ink);position:relative;
 }
+.hero-pct.profit-mode{
+  background:var(--gold-gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
 .hero-pct-suffix{
   font-family:var(--font-num);
   font-size:42px;
   vertical-align:baseline;
   opacity:.4;margin-left:2px;
+}
+.hero-pct.profit-mode .hero-pct-suffix{
+  -webkit-text-fill-color:transparent;
+  opacity:.6;
 }
 
 /* Stamp overlaid on hero */
@@ -152,6 +165,7 @@ body::after{
   transform:rotate(-12deg);
   opacity:.8;text-transform:uppercase;
   z-index:2;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .4s;
 }
 .stamp::before{
   content:'';position:absolute;inset:-2px;
@@ -163,10 +177,21 @@ body::after{
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size:64px;mix-blend-mode:screen;opacity:.35;border-radius:4px;
 }
-.stamp.green{border-color:var(--stamp-green);color:var(--stamp-green)}
-.stamp.green::before{border-color:var(--stamp-green)}
-.stamp.gold{border-color:var(--stamp-gold);color:var(--stamp-gold)}
-.stamp.gold::before{border-color:var(--stamp-gold)}
+/* 6-tier stamp colors */
+.stamp.s-blue{border-color:var(--stamp-blue);color:var(--stamp-blue)}
+.stamp.s-blue::before{border-color:var(--stamp-blue)}
+.stamp.s-purple{border-color:var(--stamp-purple);color:var(--stamp-purple)}
+.stamp.s-purple::before{border-color:var(--stamp-purple)}
+.stamp.s-orange{border-color:var(--stamp-orange);color:var(--stamp-orange)}
+.stamp.s-orange::before{border-color:var(--stamp-orange)}
+.stamp.s-green{border-color:var(--stamp-green);color:var(--stamp-green)}
+.stamp.s-green::before{border-color:var(--stamp-green)}
+.stamp.s-gold{border-color:var(--stamp-gold);color:var(--stamp-gold)}
+.stamp.s-gold::before{border-color:var(--stamp-gold)}
+.stamp.s-gold.legend{
+  border-width:3.5px;
+  text-shadow:0 0 6px rgba(200,127,10,.3);
+}
 
 /* Status Line */
 .status-line{
@@ -200,25 +225,58 @@ body::after{
   opacity:.5;
 }
 
-/* === SEASON PROGRESS TRACK === */
-.season-card{
-  background:#fffdf7;
+/* === OVERVIEW STRIP (merged season + mini-tickets) === */
+.overview-strip{
+  background:var(--card);
   border:1px solid rgba(0,0,0,.06);
   border-radius:var(--radius);
   margin-bottom:14px;padding:16px;
   box-shadow:0 1px 3px rgba(0,0,0,.03);
 }
-.season-header{
+.overview-header{
   display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
-.season-title{font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.5px}
-.season-badge{
+.overview-title{font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.5px}
+.overview-badge{
   font-family:var(--font-mono);font-size:9px;font-weight:600;
   padding:3px 10px;border-radius:100px;
   background:var(--gold-bg);color:var(--gold);letter-spacing:1px;
 }
-.track-wrap{position:relative;padding:0 16px;margin-bottom:8px}
+
+/* Key figures row */
+.overview-figures{
+  display:flex;gap:4px;margin-bottom:12px;
+}
+.overview-fig{
+  flex:1;text-align:center;
+  padding:8px 4px;
+  border-radius:8px;
+  background:rgba(0,0,0,.015);
+}
+.overview-fig-val{
+  font-family:var(--font-mono);
+  font-size:18px;font-weight:700;
+  line-height:1.1;margin-bottom:2px;
+}
+.overview-fig-label{
+  font-family:var(--font-mono);font-size:8px;font-weight:600;
+  color:var(--ink4);letter-spacing:1.2px;text-transform:uppercase;
+}
+
+/* Secondary stats */
+.overview-sub{
+  display:flex;justify-content:center;gap:12px;
+  font-family:var(--font-mono);font-size:11px;color:var(--ink3);
+  padding:8px 0;
+  border-top:1px dotted rgba(0,0,0,.08);
+  border-bottom:1px dotted rgba(0,0,0,.08);
+  margin-bottom:14px;
+}
+.overview-sub .val{font-weight:700;color:var(--ink2)}
+
+/* Milestone track */
+.track-wrap{position:relative;padding:0 16px;margin-bottom:6px}
 .track-rail{
   height:6px;border-radius:3px;
   background:rgba(0,0,0,.06);
@@ -237,20 +295,19 @@ body::after{
   position:absolute;top:50%;transform:translate(-50%,-50%);z-index:2;
 }
 .track-ms-icon{
-  width:30px;height:30px;border-radius:50%;
-  background:#fffdf7;border:2.5px solid rgba(0,0,0,.1);
+  width:28px;height:28px;border-radius:50%;
+  background:var(--card);border:2.5px solid rgba(0,0,0,.1);
   display:flex;align-items:center;justify-content:center;
-  font-size:13px;transition:all .4s cubic-bezier(.34,1.56,.64,1);
+  font-size:12px;transition:all .4s cubic-bezier(.34,1.56,.64,1);
   position:relative;
 }
 .track-ms.reached .track-ms-icon{
   border-color:var(--green);
-  box-shadow:0 0 0 4px rgba(26,138,85,.12);
-  transform:scale(1);
+  box-shadow:0 0 0 3px rgba(26,138,85,.12);
 }
 .track-ms.reached.gold .track-ms-icon{
   border-color:var(--gold);
-  box-shadow:0 0 0 4px rgba(212,146,10,.15);
+  box-shadow:0 0 0 3px rgba(212,146,10,.15);
 }
 .track-ms.inactive .track-ms-icon{filter:grayscale(1);opacity:.4}
 @keyframes nodeBounce{
@@ -262,7 +319,7 @@ body::after{
 
 .track-labels{
   display:flex;justify-content:space-between;
-  padding:0 4px;margin-top:22px;
+  padding:0 4px;margin-top:20px;
 }
 .track-label{
   width:60px;text-align:center;
@@ -271,39 +328,91 @@ body::after{
   line-height:1.3;
 }
 .track-label.active{color:var(--ink2);font-weight:600}
-.track-footer{
-  text-align:center;margin-top:12px;
+.track-label-date{
+  display:block;font-size:7px;color:var(--ink4);
+  margin-top:1px;opacity:.7;
+}
+
+.overview-footer{
+  text-align:center;margin-top:10px;
   font-size:11px;color:var(--ink3);
   font-family:var(--font-mono);line-height:1.6;
 }
 
-/* === MINI TICKETS (data overview) === */
-.mini-tickets{display:flex;gap:8px;margin-bottom:14px}
-.mini-ticket{
-  flex:1;background:#fffdf7;
+/* === ACHIEVEMENTS WALL === */
+.achieve-section{
+  background:var(--card);
   border:1px solid rgba(0,0,0,.06);
-  border-radius:10px;padding:14px 6px 12px;
-  text-align:center;
+  border-radius:var(--radius);
+  margin-bottom:14px;overflow:hidden;
   box-shadow:0 1px 3px rgba(0,0,0,.03);
+}
+.achieve-head{
+  padding:14px 16px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(0,0,0,.04);
+}
+.achieve-title{font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.5px}
+.achieve-count{
+  font-family:var(--font-mono);font-size:9px;font-weight:600;
+  padding:3px 8px;border-radius:100px;
+  background:var(--gold-bg);color:var(--gold);
+}
+.achieve-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  padding:14px 16px 16px;
+}
+.achieve-item{
+  text-align:center;
+  padding:10px 4px 8px;
+  border-radius:10px;
+  border:1.5px dashed rgba(0,0,0,.08);
+  background:rgba(0,0,0,.01);
   transition:transform .3s;
+  position:relative;
 }
-.mini-ticket:nth-child(1){transform:rotate(-1.5deg)}
-.mini-ticket:nth-child(2){transform:rotate(0.3deg)}
-.mini-ticket:nth-child(3){transform:rotate(1.5deg)}
-.mini-ticket-icon{font-size:18px;margin-bottom:4px}
-.mini-ticket-val{
-  font-family:var(--font-mono);
-  font-size:18px;font-weight:700;
-  margin-bottom:2px;line-height:1.1;
+.achieve-item.earned{
+  border-style:solid;
+  border-color:rgba(0,0,0,.06);
+  background:var(--paper-warm);
 }
-.mini-ticket-label{
-  font-family:var(--font-mono);font-size:8px;font-weight:600;
-  color:var(--ink4);letter-spacing:1.5px;text-transform:uppercase;
+.achieve-item.earned::after{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 128 128' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:64px;mix-blend-mode:multiply;opacity:.04;border-radius:9px;
+  pointer-events:none;
 }
+.achieve-icon{font-size:22px;margin-bottom:3px;line-height:1}
+.achieve-item:not(.earned) .achieve-icon{filter:grayscale(1);opacity:.3}
+.achieve-name{
+  font-size:10px;font-weight:600;color:var(--ink2);
+  margin-bottom:2px;
+}
+.achieve-item:not(.earned) .achieve-name{color:var(--ink4)}
+.achieve-date{
+  font-family:var(--font-mono);font-size:8px;
+  color:var(--ink4);letter-spacing:.3px;
+}
+/* Stagger appearance */
+@keyframes stampIn{
+  0%{transform:scale(0.7) translateY(-6px);opacity:0}
+  70%{transform:scale(1.05) translateY(0)}
+  100%{transform:scale(1) translateY(0);opacity:1}
+}
+.achieve-item.earned.animate-in{
+  animation:stampIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
+  opacity:0;
+}
+/* Micro-rotation for earned stamps */
+.achieve-item.earned:nth-child(odd){transform:rotate(-1.2deg)}
+.achieve-item.earned:nth-child(even){transform:rotate(0.8deg)}
+.achieve-item.earned:nth-child(3n){transform:rotate(1.5deg)}
 
 /* === SECTION CARDS === */
 .section{
-  background:#fffdf7;
+  background:var(--card);
   border:1px solid rgba(0,0,0,.06);
   border-radius:var(--radius);
   margin-bottom:14px;overflow:hidden;
@@ -327,12 +436,17 @@ body::after{
 #trendCanvas{width:100%;height:100%;display:block}
 .chart-tooltip{
   position:absolute;padding:5px 10px;
-  background:#fffdf7;border:1px solid rgba(0,0,0,.1);
+  background:var(--card);border:1px solid rgba(0,0,0,.1);
   border-radius:6px;font-size:10px;font-weight:600;
   font-family:var(--font-mono);
   pointer-events:none;opacity:0;transition:opacity .2s;
   white-space:nowrap;z-index:10;
   box-shadow:0 2px 8px rgba(0,0,0,.08);color:var(--ink);
+}
+.chart-info{
+  text-align:center;font-family:var(--font-mono);
+  font-size:10px;color:var(--ink4);
+  padding:6px 0 2px;min-height:22px;
 }
 .chart-legend{display:flex;gap:14px;justify-content:center;margin-top:4px}
 .chart-legend span{font-size:9px;color:var(--ink4);display:flex;align-items:center;gap:4px}
@@ -340,6 +454,13 @@ body::after{
 
 /* === VISIT CARDS === */
 .visit-cards{padding-top:8px}
+.visit-month-label{
+  font-family:var(--font-mono);font-size:10px;font-weight:600;
+  color:var(--ink4);letter-spacing:1px;
+  padding:8px 0 4px;
+  border-bottom:1px dotted rgba(0,0,0,.06);
+  margin-bottom:6px;
+}
 .visit-card{
   background:var(--paper-warm);
   border:1.5px solid rgba(0,0,0,.06);
@@ -349,23 +470,13 @@ body::after{
   transition:transform .2s;
 }
 .visit-card.best-card{
-  border-color:var(--gold);
+  border-left:3.5px solid var(--gold);
   background:linear-gradient(135deg,#fffef8,#fef8e7);
-  box-shadow:0 0 0 1px rgba(212,146,10,.08);
 }
 .visit-card.worst-card{
-  border:1.5px dashed rgba(196,64,64,.4);
+  border-left:3.5px solid var(--red);
   background:#fffafa;
 }
-.visit-card-sticker{
-  position:absolute;top:-7px;left:12px;
-  font-family:var(--font-mono);font-size:8px;font-weight:700;
-  padding:2px 8px;border-radius:3px;
-  letter-spacing:1px;color:#fff;
-  line-height:1.4;
-}
-.visit-card-sticker.best{background:var(--gold)}
-.visit-card-sticker.worst{background:var(--red)}
 .visit-card-header{
   display:flex;justify-content:space-between;align-items:center;
   margin-bottom:8px;
@@ -379,11 +490,19 @@ body::after{
   color:var(--ink3);flex-shrink:0;
 }
 .visit-card-date{font-size:11px;font-weight:600;color:var(--ink2)}
+.visit-card-mood{font-size:14px;margin-left:4px}
+.visit-card-right{display:flex;align-items:center;gap:6px}
 .visit-card-net{
   font-family:var(--font-mono);font-size:14px;font-weight:700;
 }
 .visit-card-net.pos{color:var(--green)}
 .visit-card-net.neg{color:var(--red)}
+.visit-card-tag{
+  font-family:var(--font-mono);font-size:7px;font-weight:700;
+  padding:2px 5px;border-radius:3px;letter-spacing:.5px;color:#fff;
+}
+.visit-card-tag.best{background:var(--gold)}
+.visit-card-tag.worst{background:var(--red)}
 .visit-bar-track{
   height:20px;border-radius:5px;display:flex;gap:2px;
   overflow:hidden;background:rgba(0,0,0,.04);
@@ -397,6 +516,27 @@ body::after{
 .visit-bar-seg.sv{background:var(--green)}
 .visit-bar-seg.sp{background:var(--red)}
 
+/* Expandable visit detail */
+.visit-detail{
+  max-height:0;overflow:hidden;
+  transition:max-height .3s ease;
+}
+.visit-detail.open{max-height:500px}
+.visit-detail-inner{
+  padding-top:8px;
+  border-top:1px dashed rgba(0,0,0,.06);
+  margin-top:8px;
+}
+.visit-detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 0;
+}
+.visit-detail-left{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink2)}
+.visit-detail-left span:first-child{font-size:12px;width:18px;text-align:center}
+.visit-detail-val{font-family:var(--font-mono);font-size:11px;font-weight:600}
+.visit-detail-val.pos{color:var(--green)}
+.visit-detail-val.neg{color:var(--red)}
+
 .visit-toggle{
   text-align:center;padding:6px;
   font-size:11px;color:var(--ink4);font-weight:500;
@@ -405,39 +545,38 @@ body::after{
 }
 .visit-toggle:hover{color:var(--ink2)}
 
-/* === SPENDING FLOW (bidirectional) === */
+/* === SPENDING FLOW (separated list) === */
+.flow-group-title{
+  font-family:var(--font-mono);font-size:9px;font-weight:600;
+  color:var(--ink4);letter-spacing:1px;text-transform:uppercase;
+  padding:10px 0 6px;
+}
 .flow-item{
   display:flex;align-items:center;gap:8px;
-  padding:8px 0;
+  padding:6px 0;
 }
 .flow-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
-.flow-name{font-size:11px;font-weight:500;color:var(--ink2);width:42px;flex-shrink:0}
+.flow-name{font-size:11px;font-weight:500;color:var(--ink2);min-width:52px;flex-shrink:0}
 .flow-bar-wrap{
-  flex:1;position:relative;height:18px;
-  display:flex;align-items:center;
-}
-.flow-bar-left{
-  flex:1;display:flex;justify-content:flex-end;
-  height:100%;position:relative;
-}
-.flow-bar-right{
-  flex:1;display:flex;justify-content:flex-start;
-  height:100%;position:relative;
-}
-.flow-center{
-  width:2px;height:100%;background:rgba(0,0,0,.15);
-  flex-shrink:0;border-radius:1px;
+  flex:1;height:14px;border-radius:4px;
+  background:rgba(0,0,0,.04);overflow:hidden;
 }
 .flow-bar{
-  height:14px;border-radius:4px;margin:2px 0;
+  height:100%;border-radius:4px;
   transition:width 1.2s cubic-bezier(.16,1,.3,1);
-  min-width:0;
+  min-width:0;width:0%;
 }
-.flow-bar.earn{background:var(--green);margin-left:3px}
-.flow-bar.spend{background:var(--red);margin-right:3px}
+.flow-bar.earn{background:var(--green)}
+.flow-bar.spend{background:var(--red)}
 .flow-val{
   font-family:var(--font-mono);font-size:10px;font-weight:600;
-  flex-shrink:0;width:52px;text-align:right;
+  flex-shrink:0;min-width:48px;text-align:right;
+}
+.flow-net-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0 4px;margin-top:6px;
+  border-top:1.5px solid rgba(0,0,0,.06);
+  font-family:var(--font-mono);font-weight:700;font-size:12px;
 }
 
 /* === DETAIL ROWS === */
@@ -468,14 +607,10 @@ body::after{
 .detail-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
 .detail-val{font-family:var(--font-mono);font-size:11px;font-weight:600;flex-shrink:0}
 .detail-val.pos{color:var(--green)}.detail-val.neg{color:var(--red)}.detail-val.z{color:var(--ink4)}
-
-/* Perforated separator between detail groups */
 .detail-perf{
   border:none;border-top:1px dashed rgba(0,0,0,.06);
   margin:4px 0;
 }
-
-/* Collapsible */
 .detail-toggle{
   display:flex;align-items:center;justify-content:center;
   padding:10px;cursor:pointer;gap:4px;
@@ -488,7 +623,7 @@ body::after{
 .detail-hidden{display:none}
 .detail-hidden.show{display:block}
 
-/* === SEASON FOOTER === */
+/* === SEASON FOOTER (enhanced) === */
 .season-footer{
   text-align:center;padding:20px 16px 8px;
   position:relative;
@@ -503,7 +638,27 @@ body::after{
   font-family:var(--font-mono);
   font-size:10px;font-weight:600;
   color:var(--ink3);letter-spacing:2px;
-  margin-bottom:8px;
+  margin-bottom:10px;
+}
+.season-footer-title{
+  font-family:var(--font-hand);
+  font-size:28px;font-weight:600;
+  color:var(--ink-handwrite);
+  line-height:1.2;margin-bottom:2px;
+}
+.season-footer-desc{
+  font-size:12px;color:var(--ink3);
+  line-height:1.5;margin-bottom:14px;
+}
+.season-footer-goal{
+  display:inline-block;
+  font-family:var(--font-mono);font-size:11px;
+  color:var(--ink2);
+  padding:6px 14px;
+  border:1px dashed rgba(0,0,0,.1);
+  border-radius:8px;
+  margin-bottom:14px;
+  background:rgba(0,0,0,.01);
 }
 .season-footer-quote{
   font-family:var(--font-hand);
@@ -584,14 +739,38 @@ const MILESTONES=[
   {pct:100,icon:'🏆',label:'回本成功'}
 ];
 
+// Achievement definitions (computable from __DATA__)
+const ACHIEVEMENTS=[
+  {id:'first',icon:'🎫',name:'首次入园',check:(v,s)=>v.length>=1,dateFrom:(v)=>v[0]?.date},
+  {id:'five',icon:'⭐',name:'五次常客',check:(v,s)=>v.length>=5,dateFrom:(v)=>v[4]?.date},
+  {id:'ten',icon:'👑',name:'十次元老',check:(v,s)=>v.length>=10,dateFrom:(v)=>v[9]?.date},
+  {id:'even',icon:'🏆',name:'回本成功',check:(v,s)=>s.done,dateFrom:(v,s)=>{const i=v.findIndex((x,j)=>j>0&&x.cumNet>=COST&&v[j-1].cumNet<COST);return i>=0?v[i].date:(v.length>0&&v[v.length-1].cumNet>=COST?v[v.length-1].date:null)}},
+  {id:'p500',icon:'💰',name:'赚回五百',check:(v,s)=>s.net-COST>=500,dateFrom:(v)=>{let d=null;for(const x of v){if(x.cumNet>=COST+500){d=x.date;break;}}return d}},
+  {id:'best',icon:'🔥',name:'单日之王',check:(v,s)=>s.bestNet>=300,dateFrom:(v,s)=>s.bestIdx>=0?v[s.bestIdx].date:null},
+  {id:'food',icon:'🍔',name:'美食猎人',check:(v,s)=>s.catCounts['🍔 餐饮']>=3,dateFrom:()=>null},
+  {id:'shop',icon:'🎁',name:'购物达人',check:(v,s)=>s.catCounts['🎁 商品折扣']>=3,dateFrom:()=>null},
+  {id:'weekend',icon:'⚡',name:'周末战士',check:(v,s)=>{let c=0;v.forEach(x=>{const d=new Date(x.date+'T00:00:00').getDay();if(d===0||d===6)c++});return c>=5},dateFrom:()=>null}
+];
+
 function fmtDate(d){
   const dt=new Date(d+'T00:00:00');
   const w=['日','一','二','三','四','五','六'];
   return`${dt.getMonth()+1}月${dt.getDate()}日 周${w[dt.getDay()]}`;
 }
+function fmtShortDate(d){
+  const dt=new Date(d+'T00:00:00');
+  return`${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
+}
 function fmtMoney(v){return v>=0?'+¥'+v:'-¥'+Math.abs(v)}
+function fmtMonth(d){
+  const dt=new Date(d+'T00:00:00');
+  return`${dt.getFullYear()}年${dt.getMonth()+1}月`;
+}
 
 function countUp(el,target,prefix='',suffix='',duration=1200){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches){
+    el.textContent=prefix+target+suffix;return;
+  }
   const start=performance.now();
   (function step(now){
     const p=Math.min((now-start)/duration,1);
@@ -603,6 +782,7 @@ function countUp(el,target,prefix='',suffix='',duration=1200){
 }
 
 function confetti(){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const box=document.createElement('div');box.className='confetti-box';
   const cols=['#1a8a55','#22c06e','#d4920a','#f0a81c','#c44040','#3a7bd5','#7c3aed','#e05555'];
   for(let i=0;i<80;i++){
@@ -624,7 +804,7 @@ function confetti(){
 }
 
 // ============================================
-// TREND CHART (upgraded)
+// TREND CHART (simplified per consensus)
 // ============================================
 function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
   const dpr=window.devicePixelRatio||1;
@@ -635,17 +815,17 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
   const ctx=canvas.getContext('2d');
   ctx.scale(dpr,dpr);
 
-  const pad={t:24,r:16,b:30,l:42};
+  const pad={t:20,r:16,b:28,l:42};
   const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b;
 
   const maxVal=Math.max(COST*1.15,...visits.map(v=>v.cumNet))*1.05;
   const x=i=>pad.l+(visits.length===1?cW/2:i/(visits.length-1)*cW);
   const y=v=>pad.t+cH-(v/maxVal)*cH;
 
-  // Grid
-  ctx.strokeStyle='rgba(0,0,0,0.04)';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const gy=pad.t+(cH/4)*i;
+  // Grid (lighter, fewer lines — 3 gridlines per Codex)
+  ctx.strokeStyle='rgba(0,0,0,0.035)';ctx.lineWidth=1;
+  for(let i=0;i<=3;i++){
+    const gy=pad.t+(cH/3)*i;
     ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(W-pad.r,gy);ctx.stroke();
   }
 
@@ -657,31 +837,30 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
   ctx.beginPath();ctx.moveTo(pad.l,goalY);ctx.lineTo(W-pad.r,goalY);ctx.stroke();
   ctx.restore();
 
-  // Goal label with flag
+  // Goal label
   ctx.font="600 9px 'IBM Plex Mono',monospace";
   ctx.fillStyle='rgba(0,0,0,0.22)';ctx.textAlign='end';
-  ctx.fillText('¥'+COST+' GOAL 🏁',W-pad.r,goalY-5);
+  ctx.fillText('¥'+COST+' GOAL',W-pad.r,goalY-5);
 
-  // Y labels
-  ctx.textAlign='end';ctx.fillStyle='rgba(0,0,0,0.2)';
+  // Y labels (reduced to 3 per Codex)
+  ctx.textAlign='end';ctx.fillStyle='rgba(0,0,0,0.18)';
   ctx.font="500 9px 'IBM Plex Mono',monospace";
-  for(let i=0;i<=4;i++){
-    const val=Math.round(maxVal*(1-i/4));
-    ctx.fillText('¥'+val,pad.l-6,pad.t+(cH/4)*i+3);
+  for(let i=0;i<=3;i++){
+    const val=Math.round(maxVal*(1-i/3));
+    ctx.fillText('¥'+val,pad.l-6,pad.t+(cH/3)*i+3);
   }
 
-  // X labels as date stamps
+  // X labels
   ctx.textAlign='center';
   visits.forEach((v,i)=>{
     const dt=new Date(v.date+'T00:00:00');
     const label=(dt.getMonth()+1)+'/'+dt.getDate();
-    ctx.fillStyle='rgba(0,0,0,0.15)';
+    ctx.fillStyle='rgba(0,0,0,0.13)';
     ctx.fillText(label,x(i),H-8);
   });
 
   if(visits.length<2)return;
 
-  // Points
   const pts=visits.map((v,i)=>({x:x(i),y:y(v.cumNet)}));
 
   // Cardinal spline
@@ -703,7 +882,7 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
   }
   const cp=getCardinalPoints(pts);
 
-  // Hatching pattern for area fill
+  // Hatching pattern
   const patCvs=document.createElement('canvas');
   patCvs.width=8;patCvs.height=8;
   const pctx=patCvs.getContext('2d');
@@ -714,20 +893,18 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
   pctx.beginPath();pctx.moveTo(6,10);pctx.lineTo(10,6);pctx.stroke();
   const hatch=ctx.createPattern(patCvs,'repeat');
 
-  // Area fill (hatching + gradient blend)
+  // Area fill
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(pts[0].x,y(0));
-  ctx.lineTo(pts[0].x,pts[0].y);
+  ctx.moveTo(pts[0].x,y(0));ctx.lineTo(pts[0].x,pts[0].y);
   for(let i=0;i<cp.length-1;i++){
     ctx.bezierCurveTo(cp[i].cp1x,cp[i].cp1y,cp[i].cp2x,cp[i].cp2y,cp[i].x,cp[i].y);
   }
-  ctx.lineTo(pts[pts.length-1].x,y(0));
-  ctx.closePath();
+  ctx.lineTo(pts[pts.length-1].x,y(0));ctx.closePath();
   ctx.fillStyle=hatch;ctx.fill();
   ctx.restore();
 
-  // Soft gradient overlay on area
+  // Soft gradient overlay
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(pts[0].x,y(0));ctx.lineTo(pts[0].x,pts[0].y);
@@ -751,38 +928,29 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
   ctx.strokeStyle=lineColor;ctx.lineWidth=2.5;
   ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
 
-  // Data points — stamp style (double circle)
+  // Data points — clean dots, no BEST/WORST labels (hover only)
   pts.forEach((p,i)=>{
     const isBE=i>0&&visits[i].cumNet>=COST&&visits[i-1].cumNet<COST;
     const isBest=i===bestIdx&&visits.length>1;
     const isWorst=i===worstIdx&&visits.length>1&&visits[worstIdx].net<0;
 
-    // Outer ring
-    const outerR=isBE?7:isBest||isWorst?5.5:4;
+    const outerR=isBE?7:isBest||isWorst?5:3.5;
     ctx.beginPath();ctx.arc(p.x,p.y,outerR,0,Math.PI*2);
-    ctx.strokeStyle=isBE?'var(--gold)':isBest?'var(--green)':isWorst?'var(--red)':lineColor;
+    ctx.strokeStyle=isBE?'#d4920a':isBest?'#1a8a55':isWorst?'#c44040':lineColor;
     ctx.lineWidth=1.5;ctx.stroke();
-    // Inner fill
     ctx.beginPath();ctx.arc(p.x,p.y,outerR-2,0,Math.PI*2);
-    ctx.fillStyle=isBE?'var(--gold-bright)':isBest?'var(--green)':isWorst?'var(--red)':'#fffdf7';
+    ctx.fillStyle=isBE?'#f0a81c':isBest?'#1a8a55':isWorst?'#c44040':'#fffdf7';
     ctx.fill();
-    // Center dot
     if(!isBE&&!isBest&&!isWorst){
       ctx.beginPath();ctx.arc(p.x,p.y,1.5,0,Math.PI*2);
       ctx.fillStyle=lineColor;ctx.fill();
     }
 
-    // Annotations
-    ctx.font="bold 8px 'IBM Plex Mono',monospace";ctx.textAlign='center';
+    // Only annotate break-even point (strongest signal)
     if(isBE){
-      ctx.fillStyle='var(--gold)';
-      ctx.fillText('🏆 BREAK EVEN',p.x,p.y-12);
-    }else if(isBest){
-      ctx.fillStyle='var(--green)';
-      ctx.fillText('BEST',p.x,p.y-10);
-    }else if(isWorst){
-      ctx.fillStyle='var(--red)';
-      ctx.fillText('WORST',p.x,p.y-10);
+      ctx.font="bold 8px 'IBM Plex Mono',monospace";ctx.textAlign='center';
+      ctx.fillStyle='#d4920a';
+      ctx.fillText('BREAK EVEN',p.x,p.y-12);
     }
   });
 
@@ -800,31 +968,32 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
     }
   }
 
-  // Tooltip
-  const tooltip=canvas.parentElement.querySelector('.chart-tooltip');
+  // Tooltip via info bar below chart (not floating overlay)
+  const infoBar=canvas.parentElement.parentElement.querySelector('.chart-info');
   function handleHover(mx){
     let closest=-1,minD=Infinity;
     pts.forEach((p,i)=>{const d=Math.abs(p.x-mx);if(d<minD){minD=d;closest=i}});
-    if(closest>=0&&minD<40){
+    if(closest>=0&&minD<40&&infoBar){
       const v=visits[closest];
-      const dt=new Date(v.date+'T00:00:00');
-      tooltip.innerHTML=`${dt.getMonth()+1}/${dt.getDate()} · 累计 <span style="color:${v.cumNet>=COST?'var(--green)':'var(--blue)'}">¥${v.cumNet}</span> · 当日 ${v.net>=0?'+':''}¥${v.net}`;
-      tooltip.style.opacity='1';
-      tooltip.style.left=Math.min(Math.max(pts[closest].x-60,0),W-140)+'px';
-      tooltip.style.top=(pts[closest].y-34)+'px';
-    }else{
-      tooltip.style.opacity='0';
+      const isBest=closest===bestIdx&&visits.length>1;
+      const isWorst=closest===worstIdx&&visits.length>1&&visits[worstIdx].net<0;
+      let tag='';
+      if(isBest)tag=' · <span style="color:#d4920a">BEST</span>';
+      if(isWorst)tag=' · <span style="color:#c44040">WORST</span>';
+      infoBar.innerHTML=`${fmtDate(v.date)} · 累计 <span style="color:${v.cumNet>=COST?'var(--green)':'var(--blue)'}">¥${v.cumNet}</span> · 当日 ${v.net>=0?'+':''}¥${v.net}${tag}`;
+    }else if(infoBar){
+      infoBar.innerHTML='触摸查看每次入园数据';
     }
   }
   canvas.addEventListener('mousemove',e=>{
     const br=canvas.getBoundingClientRect();handleHover(e.clientX-br.left);
   });
-  canvas.addEventListener('mouseleave',()=>{tooltip.style.opacity='0'});
+  canvas.addEventListener('mouseleave',()=>{if(infoBar)infoBar.innerHTML='触摸查看每次入园数据'});
   canvas.addEventListener('touchmove',e=>{
     e.preventDefault();
     const br=canvas.getBoundingClientRect();handleHover(e.touches[0].clientX-br.left);
   },{passive:false});
-  canvas.addEventListener('touchend',()=>{tooltip.style.opacity='0'});
+  canvas.addEventListener('touchend',()=>{if(infoBar)infoBar.innerHTML='触摸查看每次入园数据'});
 }
 
 // ============================================
@@ -870,26 +1039,33 @@ function render(records){
   });
   const cats=Object.values(catMap).sort((a,b)=>(b.saved+b.spent)-(a.saved+a.spent));
 
-  // Stamp
+  // Category counts for achievements
+  const catCounts={};
+  cats.forEach(c=>catCounts[c.type]=c.count);
+
+  // 6-tier stamp system (Claude proposal + Gemini Chinese titles)
   let stampText,stampClass;
-  if(pct<50){stampText='WARM-UP';stampClass=''}
-  else if(pct<100){stampText='ON FIRE';stampClass='gold'}
-  else if(pct<130){stampText='BREAK EVEN';stampClass='green'}
-  else{stampText='PROFIT MODE';stampClass='gold'}
+  if(pct<25){stampText='ROOKIE';stampClass='s-blue'}
+  else if(pct<50){stampText='REGULAR';stampClass='s-purple'}
+  else if(pct<75){stampText='VETERAN';stampClass='s-orange'}
+  else if(pct<100){stampText='ALMOST THERE';stampClass='s-gold'}
+  else if(pct<150){stampText='BREAK EVEN';stampClass='s-green'}
+  else{stampText='LEGEND';stampClass='s-gold legend'}
+
+  // Achievement title for footer (Gemini's social copy)
+  let achieveTitle,achieveDesc;
+  if(pct<30){achieveTitle='「初入江湖」';achieveDesc='每一次出发都是积累，后面还有好多次'}
+  else if(pct<60){achieveTitle='「锋芒初现」';achieveDesc='势头正猛，继续保持这个节奏'}
+  else if(pct<100){achieveTitle='「王座在望」';achieveDesc='冲刺阶段，回本庆典就在前方'}
+  else if(pct<150){achieveTitle='「功成名就」';achieveDesc='荣归故里，你已超越绝大多数年卡持有者'}
+  else{achieveTitle='「传奇降临」';achieveDesc='年卡界的传说，每次入园都是纯赚'}
 
   // Slogan
   let slogan;
   if(pct<30)slogan='「旅程才刚开始」';
   else if(pct<70)slogan='「势头正猛」';
   else if(pct<100)slogan='「终点在望」';
-  else slogan='「你已经赚回来了」';
-
-  // Footer commentary
-  let commentary;
-  if(pct<30)commentary='才刚热身，别急，后面还有好多次';
-  else if(pct<60)commentary='已经是半程战士了，继续保持';
-  else if(pct<100)commentary='冲刺阶段！可以开始期待回本庆典了';
-  else commentary='年卡钱早就赚回来了，现在每次都是纯赚';
+  else slogan='「年卡钱早就赚回来了」';
 
   // Days since first visit
   const now=new Date();
@@ -907,12 +1083,47 @@ function render(records){
   // Break-even visit index
   const breakEvenIdx=visits.findIndex((v,i)=>i>0&&v.cumNet>=COST&&visits[i-1].cumNet<COST);
 
-  // Max flow value for bidirectional bars
+  // Compute achievements
+  const achieveState={done,net,bestNet,bestIdx,catCounts};
+  const earnedAchievements=ACHIEVEMENTS.map(a=>{
+    const earned=a.check(visits,achieveState);
+    const date=earned?a.dateFrom(visits,achieveState):null;
+    return{...a,earned,date};
+  });
+  const earnedCount=earnedAchievements.filter(a=>a.earned).length;
+
+  // Next goal for footer
+  const nextGoal=earnedAchievements.find(a=>!a.earned);
+
+  // Mood emoji per visit
+  function getMood(netVal){
+    if(netVal>=250)return'🤩';
+    if(netVal>=50)return'😊';
+    if(netVal>=0)return'😌';
+    if(netVal>=-100)return'😅';
+    return'💸';
+  }
+
+  // Max flow value for bars
   const maxFlowVal=Math.max(...cats.map(c=>c.type==='🎢 入园'?c.saved:c.spent),1);
+
+  // Group visits by month (reverse chronological)
+  const visitsByMonth={};
+  visits.slice().reverse().forEach((v,ri)=>{
+    const month=fmtMonth(v.date);
+    if(!visitsByMonth[month])visitsByMonth[month]=[];
+    visitsByMonth[month].push({v,origIdx:visits.length-1-ri,ri});
+  });
+
+  // Milestone date tracking
+  const milestoneDates=MILESTONES.map(m=>{
+    const idx=visits.findIndex(v=>v.cumNet>=COST*m.pct/100);
+    return idx>=0?fmtShortDate(visits[idx].date):'----';
+  });
 
   const app=document.getElementById('app');
   app.innerHTML=`
-    <!-- ===== HERO TICKET (slim) ===== -->
+    <!-- ===== HERO TICKET ===== -->
     <div class="ticket">
       <div class="ticket-top">
         <div class="ticket-brand">SEASON PASS · NO.${ticketNo}</div>
@@ -924,12 +1135,18 @@ function render(records){
 
       <div class="ticket-bottom">
         <div class="hero-block">
-          <div class="hero-pct" id="heroPct">0<span class="hero-pct-suffix">%</span></div>
+          ${done
+            ?`<div class="hero-pct profit-mode" id="heroPct">+¥<span id="heroNum">0</span></div>`
+            :`<div class="hero-pct" id="heroPct"><span id="heroNum">0</span><span class="hero-pct-suffix">%</span></div>`
+          }
           <div class="stamp ${stampClass}">${stampText}</div>
         </div>
 
         <div class="status-line">
-          <span>${net>=0?'':'−'}¥<span class="val ${net>=0?'g':'r'}" id="netVal">0</span></span>
+          ${done
+            ?`<span>超额 <span class="val g">¥${surplus}</span></span>`
+            :`<span>净值 <span class="val ${net>=0?'g':'r'}">¥${Math.abs(net)}</span></span>`
+          }
           <span class="sep">·</span>
           <span>入园 <span class="val">${visitCount}</span> 次</span>
           <span class="sep">·</span>
@@ -941,11 +1158,32 @@ function render(records){
       </div>
     </div>
 
-    <!-- ===== SEASON PROGRESS TRACK ===== -->
-    <div class="season-card">
-      <div class="season-header">
-        <div class="season-title">赛季进度</div>
-        <div class="season-badge">SEASON 1</div>
+    <!-- ===== OVERVIEW STRIP (merged season + mini-tickets) ===== -->
+    <div class="overview-strip">
+      <div class="overview-header">
+        <div class="overview-title">赛季概览</div>
+        <div class="overview-badge">SEASON 1</div>
+      </div>
+      <div class="overview-figures">
+        <div class="overview-fig">
+          <div class="overview-fig-val" style="color:var(--green)" id="ovSaved">¥0</div>
+          <div class="overview-fig-label">已节省</div>
+        </div>
+        <div class="overview-fig">
+          <div class="overview-fig-val" style="color:var(--red)" id="ovSpent">¥0</div>
+          <div class="overview-fig-label">已消费</div>
+        </div>
+        <div class="overview-fig">
+          <div class="overview-fig-val" style="color:var(--ink)" id="ovAvg">¥0</div>
+          <div class="overview-fig-label">次均净值</div>
+        </div>
+      </div>
+      <div class="overview-sub">
+        <span><span class="val">${visitCount}</span> 次入园</span>
+        <span>·</span>
+        <span>持卡 <span class="val">${daysSince}</span> 天</span>
+        <span>·</span>
+        <span>${seasonRange}</span>
       </div>
       <div class="track-wrap">
         <div class="track-rail">
@@ -959,10 +1197,10 @@ function render(records){
           }).join('')}
         </div>
         <div class="track-labels">
-          ${MILESTONES.map(m=>`<div class="track-label${pct>=m.pct?' active':''}">${m.label}</div>`).join('')}
+          ${MILESTONES.map((m,i)=>`<div class="track-label${pct>=m.pct?' active':''}">${m.label}<span class="track-label-date">${milestoneDates[i]}</span></div>`).join('')}
         </div>
       </div>
-      <div class="track-footer">
+      <div class="overview-footer">
         ${done
           ?`已超额 <strong style="color:var(--gold)">¥${surplus}</strong> · 每次都是纯赚`
           :`距回本还差 <strong>¥${remaining}</strong> · 预计再去 <strong>${needMore}</strong> 次`
@@ -970,22 +1208,20 @@ function render(records){
       </div>
     </div>
 
-    <!-- ===== DATA OVERVIEW (3 mini tickets) ===== -->
-    <div class="mini-tickets">
-      <div class="mini-ticket">
-        <div class="mini-ticket-icon">🎫</div>
-        <div class="mini-ticket-val" style="color:var(--green)" id="mtSaved">¥0</div>
-        <div class="mini-ticket-label">SAVED</div>
+    <!-- ===== ACHIEVEMENT WALL ===== -->
+    <div class="achieve-section">
+      <div class="achieve-head">
+        <div class="achieve-title">成就印章</div>
+        <div class="achieve-count">${earnedCount} / ${ACHIEVEMENTS.length}</div>
       </div>
-      <div class="mini-ticket">
-        <div class="mini-ticket-icon">🛍️</div>
-        <div class="mini-ticket-val" style="color:var(--red)" id="mtSpent">¥0</div>
-        <div class="mini-ticket-label">SPENT</div>
-      </div>
-      <div class="mini-ticket">
-        <div class="mini-ticket-icon">📊</div>
-        <div class="mini-ticket-val" style="color:var(--blue)" id="mtAvg">¥0</div>
-        <div class="mini-ticket-label">AVG/VISIT</div>
+      <div class="achieve-grid">
+        ${earnedAchievements.map((a,i)=>`
+          <div class="achieve-item${a.earned?' earned':''}" data-aidx="${i}">
+            <div class="achieve-icon">${a.icon}</div>
+            <div class="achieve-name">${a.name}</div>
+            <div class="achieve-date">${a.earned&&a.date?fmtShortDate(a.date):(a.earned?'已达成':'----')}</div>
+          </div>
+        `).join('')}
       </div>
     </div>
 
@@ -999,8 +1235,8 @@ function render(records){
       <div class="section-body">
         <div class="chart-wrap">
           <canvas id="trendCanvas"></canvas>
-          <div class="chart-tooltip"></div>
         </div>
+        <div class="chart-info">触摸查看每次入园数据</div>
         <div class="chart-legend">
           <span><i style="background:${done?'var(--green)':'var(--blue)'}"></i> 累计净值</span>
           <span><i style="background:rgba(0,0,0,.08);border:1px dashed rgba(0,0,0,.15)"></i> 目标 ¥${COST}</span>
@@ -1010,7 +1246,7 @@ function render(records){
     </div>
     `:''}
 
-    <!-- ===== VISIT BATTLE REPORTS (cards) ===== -->
+    <!-- ===== VISIT BATTLE REPORTS (by month, with detail expand) ===== -->
     <div class="section">
       <div class="section-head">
         <div class="section-title">入园战报</div>
@@ -1018,60 +1254,91 @@ function render(records){
       </div>
       <div class="section-body">
         <div class="visit-cards" id="visitCards">
-          ${visits.slice().reverse().map((v,ri)=>{
-            const origIdx=visits.length-1-ri;
-            const isBest=origIdx===bestIdx&&visitCount>1;
-            const isWorst=origIdx===worstIdx&&visitCount>1&&worstNet<0;
-            const total=v.saved+v.spent||1;
-            const hidden=ri>=4;
-            return`<div class="visit-card${isBest?' best-card':''}${isWorst?' worst-card':''}" ${hidden?'style="display:none" data-extra':''}>${isBest?'<div class="visit-card-sticker best">🏆 BEST</div>':''}${isWorst?'<div class="visit-card-sticker worst">💀 WORST</div>':''}
-              <div class="visit-card-header">
-                <div class="visit-card-left">
-                  <div class="visit-card-idx">#${origIdx+1}</div>
-                  <div class="visit-card-date">${fmtDate(v.date)}</div>
-                </div>
-                <div class="visit-card-net ${v.net>=0?'pos':'neg'}">${v.net>=0?'+':''}¥${v.net}</div>
-              </div>
-              <div class="visit-bar-track">
-                <div class="visit-bar-seg sv" style="flex-grow:${v.saved/total}">+${v.saved}</div>
-                ${v.spent>0?`<div class="visit-bar-seg sp" style="flex-grow:${v.spent/total}">-${v.spent}</div>`:''}
-              </div>
-            </div>`;
+          ${Object.entries(visitsByMonth).map(([month,entries],mi)=>{
+            return`
+              ${mi>0?`<div class="visit-month-label" ${mi>=2?'data-extra style="display:none"':''}>${month}</div>`:`<div class="visit-month-label">${month}</div>`}
+              ${entries.map(({v,origIdx,ri})=>{
+                const isBest=origIdx===bestIdx&&visitCount>1;
+                const isWorst=origIdx===worstIdx&&visitCount>1&&worstNet<0;
+                const total=v.saved+v.spent||1;
+                const hidden=ri>=4;
+                const mood=getMood(v.net);
+                return`<div class="visit-card${isBest?' best-card':''}${isWorst?' worst-card':''}" ${hidden?'data-extra style="display:none"':''}>
+                  <div class="visit-card-header">
+                    <div class="visit-card-left">
+                      <div class="visit-card-idx">#${origIdx+1}</div>
+                      <div class="visit-card-date">${fmtDate(v.date)}</div>
+                      <div class="visit-card-mood">${mood}</div>
+                    </div>
+                    <div class="visit-card-right">
+                      ${isBest?'<span class="visit-card-tag best">BEST</span>':''}${isWorst?'<span class="visit-card-tag worst">WORST</span>':''}
+                      <div class="visit-card-net ${v.net>=0?'pos':'neg'}">${v.net>=0?'+':''}¥${v.net}</div>
+                    </div>
+                  </div>
+                  <div class="visit-bar-track">
+                    <div class="visit-bar-seg sv" style="flex-grow:${v.saved/total}">+${v.saved}</div>
+                    ${v.spent>0?`<div class="visit-bar-seg sp" style="flex-grow:${v.spent/total}">-${v.spent}</div>`:''}
+                  </div>
+                  <div class="visit-detail" id="vd${origIdx}">
+                    <div class="visit-detail-inner">
+                      ${v.items.map(item=>{
+                        const isE=item.type==='🎢 入园';
+                        const disp=isE?'+¥'+item.saved:(item.paid>0?'-¥'+item.paid:'¥0');
+                        const cls=isE&&item.saved>0?'pos':(item.paid>0?'neg':'');
+                        return`<div class="visit-detail-row">
+                          <div class="visit-detail-left"><span>${ICONS[item.type]||'📌'}</span><span>${item.name}</span></div>
+                          <div class="visit-detail-val ${cls}">${disp}</div>
+                        </div>`;
+                      }).join('')}
+                      <div class="visit-detail-row" style="margin-top:4px;padding-top:4px;border-top:1px dashed rgba(0,0,0,.06)">
+                        <div class="visit-detail-left" style="font-size:10px;color:var(--ink4)">累计进度</div>
+                        <div class="visit-detail-val" style="color:var(--ink3)">¥${v.cumNet} / ¥${COST}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>`;
+              }).join('')}
+            `;
           }).join('')}
         </div>
         ${visitCount>4?`<div class="visit-toggle" id="visitToggle">展开全部 ${visitCount} 次 ▾</div>`:''}
       </div>
     </div>
 
-    <!-- ===== SPENDING FLOW (bidirectional) ===== -->
+    <!-- ===== SPENDING FLOW (separated list) ===== -->
     <div class="section">
       <div class="section-head">
-        <div class="section-title">资金流向图谱</div>
+        <div class="section-title">消费结构</div>
       </div>
       <div class="section-body">
-        ${cats.map(c=>{
-          const isEarn=c.type==='🎢 入园';
-          const val=isEarn?c.saved:c.spent;
+        <div class="flow-group-title">节省</div>
+        ${cats.filter(c=>c.type==='🎢 入园').map(c=>{
           const icon=ICONS[c.type]||'📌';
           const label=c.type.replace(/^[^\s]+\s/,'');
-          const barPct=Math.max(val/maxFlowVal*100,2);
+          const barPct=Math.max(c.saved/maxFlowVal*100,2);
           return`<div class="flow-item">
             <div class="flow-icon">${icon}</div>
             <div class="flow-name">${label}</div>
-            <div class="flow-bar-wrap">
-              <div class="flow-bar-left">
-                ${!isEarn?`<div class="flow-bar spend" data-target="${barPct}" style="width:0%"></div>`:''}
-              </div>
-              <div class="flow-center"></div>
-              <div class="flow-bar-right">
-                ${isEarn?`<div class="flow-bar earn" data-target="${barPct}" style="width:0%"></div>`:''}
-              </div>
-            </div>
-            <div class="flow-val" style="color:${isEarn?'var(--green)':'var(--red)'}">
-              ${isEarn?'+':'−'}¥${val}
-            </div>
+            <div class="flow-bar-wrap"><div class="flow-bar earn" data-target="${barPct}"></div></div>
+            <div class="flow-val" style="color:var(--green)">+¥${c.saved}</div>
           </div>`;
         }).join('')}
+        <div class="flow-group-title">支出</div>
+        ${cats.filter(c=>c.type!=='🎢 入园').map(c=>{
+          const icon=ICONS[c.type]||'📌';
+          const label=c.type.replace(/^[^\s]+\s/,'');
+          const barPct=Math.max(c.spent/maxFlowVal*100,2);
+          return`<div class="flow-item">
+            <div class="flow-icon">${icon}</div>
+            <div class="flow-name">${label}</div>
+            <div class="flow-bar-wrap"><div class="flow-bar spend" data-target="${barPct}"></div></div>
+            <div class="flow-val" style="color:var(--red)">-¥${c.spent}</div>
+          </div>`;
+        }).join('')}
+        <div class="flow-net-row">
+          <span>净值</span>
+          <span style="color:${net>=0?'var(--green)':'var(--red)'}">${net>=0?'+':''}¥${net}</span>
+        </div>
       </div>
     </div>
 
@@ -1116,10 +1383,12 @@ function render(records){
       </div>`:''}
     </div>
 
-    <!-- ===== SEASON FOOTER ===== -->
+    <!-- ===== SEASON FOOTER (enhanced) ===== -->
     <div class="season-footer">
       <div class="season-footer-tag">SEASON 1 · ${seasonRange}</div>
-      <div class="season-footer-quote">${commentary}</div>
+      <div class="season-footer-title">${achieveTitle}</div>
+      <div class="season-footer-desc">${achieveDesc}</div>
+      ${nextGoal?`<div class="season-footer-goal">${nextGoal.icon} 下一目标：${nextGoal.name}${!done&&avgNet>0?' · 预计再去 '+needMore+' 次':''}</div>`:''}
       <div class="season-footer-source">数据来自 Notion · 自动更新 · ${updateStr}</div>
     </div>
   `;
@@ -1127,49 +1396,65 @@ function render(records){
   // ============================================
   // ANIMATIONS
   // ============================================
+  const reducedMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 
-  // Hero percentage count-up
-  const heroPctEl=document.getElementById('heroPct');
-  if(heroPctEl){
-    const displayPct=Math.min(pct,999);
-    const start=performance.now();
-    (function step(now){
-      const p=Math.min((now-start)/1400,1);
-      const ease=1-Math.pow(1-p,4);
-      heroPctEl.childNodes[0].textContent=(ease*displayPct).toFixed(1);
-      if(p<1)requestAnimationFrame(step);
-    })(start);
+  // Hero number count-up
+  const heroNumEl=document.getElementById('heroNum');
+  if(heroNumEl){
+    if(done){
+      // Count up surplus amount
+      countUp(heroNumEl,surplus,'','',1400);
+    }else{
+      // Count up percentage
+      if(reducedMotion){
+        heroNumEl.textContent=pct.toFixed(1);
+      }else{
+        const start=performance.now();
+        const displayPct=Math.min(pct,999);
+        (function step(now){
+          const p=Math.min((now-start)/1400,1);
+          const ease=1-Math.pow(1-p,4);
+          heroNumEl.textContent=(ease*displayPct).toFixed(1);
+          if(p<1)requestAnimationFrame(step);
+        })(start);
+      }
+    }
   }
 
-  // Net value count-up
-  const netEl=document.getElementById('netVal');
-  if(netEl)countUp(netEl,Math.abs(net),'','',1200);
-
-  // Mini ticket count-ups
-  const mtSaved=document.getElementById('mtSaved');
-  if(mtSaved)countUp(mtSaved,entrySaved,'¥','',1000);
-  const mtSpent=document.getElementById('mtSpent');
-  if(mtSpent)countUp(mtSpent,parkSpend,'¥','',1000);
-  const mtAvg=document.getElementById('mtAvg');
-  if(mtAvg)countUp(mtAvg,Math.round(Math.abs(avgNet)),'¥','',1000);
+  // Overview count-ups
+  const ovSaved=document.getElementById('ovSaved');
+  if(ovSaved)countUp(ovSaved,entrySaved,'¥','',1000);
+  const ovSpent=document.getElementById('ovSpent');
+  if(ovSpent)countUp(ovSpent,parkSpend,'¥','',1000);
+  const ovAvg=document.getElementById('ovAvg');
+  if(ovAvg)countUp(ovAvg,Math.round(Math.abs(avgNet)),'¥','',1000);
 
   // Season progress track fill + node bounce
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     const fill=document.getElementById('trackFill');
     if(fill)fill.style.width=Math.min(pct,120)+'%';
 
-    const trackDuration=1800;
-    const fillEnd=Math.min(pct,120);
-    MILESTONES.forEach((m,i)=>{
-      if(pct>=m.pct){
-        const delay=(m.pct/fillEnd)*trackDuration;
-        setTimeout(()=>{
-          const node=document.getElementById('ms'+i);
-          if(node)node.classList.add('bounce');
-        },delay);
-      }
-    });
+    if(!reducedMotion){
+      const trackDuration=1800;
+      const fillEnd=Math.min(pct,120);
+      MILESTONES.forEach((m,i)=>{
+        if(pct>=m.pct){
+          const delay=(m.pct/fillEnd)*trackDuration;
+          setTimeout(()=>{
+            const node=document.getElementById('ms'+i);
+            if(node)node.classList.add('bounce');
+          },delay);
+        }
+      });
+    }
   }));
+
+  // Achievement stamp-in animation
+  if(!reducedMotion){
+    document.querySelectorAll('.achieve-item.earned').forEach((el,i)=>{
+      setTimeout(()=>el.classList.add('animate-in'),200+i*100);
+    });
+  }
 
   // Trend chart
   if(visits.length>=2){
@@ -1191,6 +1476,15 @@ function render(records){
     });
   },500);
 
+  // Visit card tap to expand detail
+  document.querySelectorAll('.visit-card').forEach(card=>{
+    card.style.cursor='pointer';
+    card.addEventListener('click',()=>{
+      const detail=card.querySelector('.visit-detail');
+      if(detail)detail.classList.toggle('open');
+    });
+  });
+
   // Visit toggle
   const visitToggle=document.getElementById('visitToggle');
   if(visitToggle){
@@ -1198,7 +1492,7 @@ function render(records){
     visitToggle.addEventListener('click',()=>{
       expanded=!expanded;
       document.querySelectorAll('[data-extra]').forEach(el=>{
-        el.style.display=expanded?'block':'none';
+        el.style.display=expanded?'':'none';
       });
       visitToggle.textContent=expanded?'收起 ▴':`展开全部 ${visitCount} 次 ▾`;
     });
