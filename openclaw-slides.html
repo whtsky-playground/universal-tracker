@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenClaw — 当 AI Agent 住进你的聊天工具</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: rgba(255,255,255,0.04);
+  --surface-hover: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e8ed;
+  --text-dim: rgba(255,255,255,0.5);
+  --accent: #6366f1;
+  --accent-glow: rgba(99,102,241,0.3);
+  --green: #22c55e;
+  --orange: #f97316;
+  --red: #ef4444;
+  --blue: #3b82f6;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── Slide container ── */
+.slide {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(99,102,241,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── Slide numbers ── */
+.slide-num {
+  position: absolute;
+  top: 40px;
+  right: 60px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+
+/* ── Typography ── */
+h1 {
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+h1 .highlight {
+  background: linear-gradient(135deg, #6366f1, #a78bfa, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 1.3rem;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-bottom: 48px;
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+h2 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 40px;
+}
+
+h2 .emoji { margin-right: 12px; }
+
+/* ── Cards grid ── */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  background: var(--surface-hover);
+  border-color: rgba(99,102,241,0.2);
+  transform: translateY(-2px);
+}
+
+.card-icon {
+  font-size: 2rem;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.card h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.card p {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.card .tag {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.tag.green { background: rgba(34,197,94,0.15); color: var(--green); }
+.tag.blue { background: rgba(59,130,246,0.15); color: var(--blue); }
+.tag.orange { background: rgba(249,115,22,0.15); color: var(--orange); }
+.tag.purple { background: rgba(99,102,241,0.15); color: var(--accent); }
+
+/* ── Feature list for pros/cons ── */
+.point-block {
+  display: flex;
+  gap: 40px;
+  max-width: 1100px;
+  flex-wrap: wrap;
+}
+
+.point {
+  flex: 1 1 460px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 36px 32px;
+}
+
+.point-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.point h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.point p {
+  color: var(--text-dim);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.point .example {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.6;
+  border-left: 3px solid var(--accent);
+}
+
+/* ── Architecture diagram ── */
+.arch {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 40px;
+  max-width: 900px;
+}
+
+.arch-box {
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.arch-box.input { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); color: var(--blue); }
+.arch-box.core { background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); color: #a78bfa; font-size: 1.1rem; }
+.arch-box.output { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: var(--green); }
+
+.arch-arrow {
+  color: var(--text-dim);
+  font-size: 1.4rem;
+}
+
+/* ── Links ── */
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Quote block ── */
+.quote-block {
+  margin-top: 24px;
+  padding: 20px 24px;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 14px;
+  max-width: 900px;
+}
+
+.quote-block.info {
+  background: rgba(59,130,246,0.08);
+  border-color: rgba(59,130,246,0.2);
+}
+
+.quote-block p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.75);
+}
+
+.quote-block .source {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* ── Divider ── */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Bottom nav ── */
+.nav {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(12px);
+  padding: 8px 14px;
+  border-radius: 30px;
+  border: 1px solid var(--border);
+}
+
+.nav a {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: block;
+  transition: all 0.3s;
+}
+
+.nav a:hover, .nav a.active {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .slide { padding: 40px 24px; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.6rem; }
+  .point-block { gap: 20px; }
+  .point { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SLIDE 1: INTRO ============ -->
+<section class="slide" id="s1">
+  <span class="slide-num">01 / 04</span>
+  <h1>当 AI Agent<br>住进你的<span class="highlight">聊天工具</span></h1>
+  <p class="subtitle">
+    OpenClaw 是一个开源的 AI 私人助手运行时——本质是把 LLM（Claude / GPT 等）包进一个叫
+    <strong>Pi</strong> 的开源 Agent 框架，然后接入你已有的聊天渠道。
+    它能做的事和 Claude 差不多，但多了两个杀手级特性。
+  </p>
+
+  <div class="arch">
+    <div class="arch-box input">💬 Telegram</div>
+    <div class="arch-box input">💬 Discord</div>
+    <div class="arch-box input">💬 WhatsApp</div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-box core">🦞 OpenClaw (Pi Agent)</div>
+    <span class="arch-arrow">→</span>
+    <div class="arch-box output">🧠 Claude / GPT</div>
+  </div>
+
+  <div class="cards" style="margin-top: 40px; max-width: 700px;">
+    <div class="card">
+      <span class="card-icon">💓</span>
+      <h3>Heartbeat 心跳</h3>
+      <p>Agent 不是等你说话才醒来——它会定期自己"醒一下"，检查邮件、监控任务、整理记忆。像一个真正的管家。</p>
+    </div>
+    <div class="card">
+      <span class="card-icon">⏰</span>
+      <h3>Cron 定时任务</h3>
+      <p>设定时间自动执行任务：每天早上发 AI 资讯摘要、定时检查股票持仓、提醒你该出门了。</p>
+    </div>
+  </div>
+
+  <div class="quote-block info" style="margin-top: 32px; max-width: 700px;">
+    <p>📊 GitHub 一周 100k+ Stars · 由 PSPDFKit 创始人 Peter Steinberger 开发 · 2026 年 2 月开源</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============ SLIDE 2: WHAT I DID ============ -->
+<section class="slide" id="s2">
+  <span class="slide-num">02 / 04</span>
+  <h2><span class="emoji">🛠️</span>我用它做了什么</h2>
+
+  <div class="cards">
+    <div class="card">
+      <span class="card-icon">📰</span>
+      <h3>AI 每日投词</h3>
+      <p>每天自动抓取 Hacker News、GitHub Trending、AI 新闻，生成中文精选摘要，直接推送到 Telegram/Discord。</p>
+      <span class="tag green">CRON 自动化</span>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🎢</span>
+      <h3>环球影城年卡回本追踪</h3>
+      <p>让 Claude Code、Codex、Gemini 三个 Agent 各自设计一个回本进度网页，互相评审，最终选出最佳方案部署。</p>
+      <a href="https://whtsky-playground.github.io/universal-tracker/" target="_blank" style="display:inline-block;margin-top:8px;font-size:0.85rem;">→ 在线 Demo</a>
+      <span class="tag purple">3 AGENTS 协作</span>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🔧</span>
+      <h3>copilot2api</h3>
+      <p>指挥 Claude Code 和 Codex 用 Go 重写了 GitHub Copilot API 代理——4300 行代码，零外部依赖，从 review 到 CI 全流程。</p>
+      <span class="tag blue">CODING AGENT</span>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🗾</span>
+      <h3>东北旅行全套规划</h3>
+      <p>8 个城市的酒店预订、9 城餐厅调研、JR Pass 分析、交通费计算——多个 subagent 并行处理，结果写入 Notion。</p>
+      <span class="tag orange">SUBAGENT 并行</span>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">📊</span>
+      <h3>美股交易监控</h3>
+      <p>Heartbeat 自动检查 Alpaca 持仓盈亏，触发止损线时告警，交易操作发到 Discord 频道。</p>
+      <span class="tag green">HEARTBEAT</span>
+    </div>
+
+    <div class="card">
+      <span class="card-icon">🔍</span>
+      <h3>环球年卡活动监控</h3>
+      <p>定时搜索北京环球影城年卡福利活动，自动去重、推送新消息——不漏任何免费徽章和限定活动。</p>
+      <span class="tag green">CRON 监控</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============ SLIDE 3: PROS ============ -->
+<section class="slide" id="s3">
+  <span class="slide-num">03 / 04</span>
+  <h2><span class="emoji">✅</span>它好在哪</h2>
+
+  <div class="point-block">
+    <div class="point">
+      <div class="point-label" style="color: var(--green);">01</div>
+      <h3>扩大了想象力</h3>
+      <p>
+        以前大家只用 AI Agent 写代码。OpenClaw 让你意识到：Agent 可以帮你订酒店、做行程、监控股票、
+        写日报、管理 Notion——<strong>一切你在电脑上做的事，它都可以做</strong>。
+      </p>
+      <div class="example">
+        💡 我让三个 Coding Agent（Claude Code / Codex / Gemini）各自设计网页，互相评审，投票选最佳方案——整个过程我只下了一条指令。
+      </div>
+    </div>
+
+    <div class="point">
+      <div class="point-label" style="color: var(--green);">02</div>
+      <h3>接近聊天工具，极低使用门槛</h3>
+      <p>
+        不需要打开网页、不需要登录后台——<strong>在微信/Telegram/Discord 里发条消息就行</strong>。
+        可以拉进群聊让它参与讨论，也可以私聊安排任务。用起来像在跟一个真人同事对话。
+      </p>
+      <div class="example">
+        💡 躺在床上用手机发条语音"帮我查一下明天东京的天气和餐厅"，起床就能看到完整方案。
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ============ SLIDE 4: CONS ============ -->
+<section class="slide" id="s4">
+  <span class="slide-num">04 / 04</span>
+  <h2><span class="emoji">⚠️</span>它的问题</h2>
+
+  <div class="point-block">
+    <div class="point">
+      <div class="point-label" style="color: var(--orange);">01</div>
+      <h3>巧妇难为无米之炊</h3>
+      <p>
+        Agent 再聪明，也受限于它能拿到的信息。国内生态的壁垒让很多数据拉不到：
+      </p>
+      <div class="example">
+        🚧 微信公众号、小红书、大众点评、12306、淘宝……这些平台要么没有 API，要么有严格的反爬机制。
+        Agent 空有一身本事，但"没有手"可以伸进去。
+        <br><br>
+        我的解决方案是自己写了大量 Skills（相当于教它用特定的 API/工具），但这不可持续。
+      </div>
+    </div>
+
+    <div class="point">
+      <div class="point-label" style="color: var(--red);">02</div>
+      <h3>安全性问题很大</h3>
+      <p>
+        OpenClaw 默认拥有极高权限——文件系统、Shell、浏览器、消息发送全部开放。
+        这意味着一旦 Agent 出错或被注入恶意指令，后果不堪设想。
+      </p>
+      <div class="quote-block" style="margin-top: 16px;">
+        <p>
+          <strong>"This should terrify you"</strong> — Meta 超级智能团队的安全主管（Safety Director）
+          在使用 OpenClaw 时，Agent 失控删除了她的大量邮件，差点清空整个收件箱。
+          社交媒体上称这是"讽刺的巅峰"——连 AI 安全专家都没逃过。
+        </p>
+        <div class="source">— Fortune / MSN 报道，2026 年 3 月</div>
+      </div>
+      <div class="example" style="border-left-color: var(--red); margin-top: 16px;">
+        🔓 Prompt Injection 风险：Agent 读取网页/邮件时可能被恶意内容劫持指令<br>
+        🔓 权限过大：默认可执行任意 Shell 命令、读写任意文件<br>
+        🔓 社区已有多起误操作报告：删除文件、发送错误消息、暴露隐私数据
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Navigation dots ── -->
+<nav class="nav" id="nav">
+  <a href="#s1" data-slide="s1"></a>
+  <a href="#s2" data-slide="s2"></a>
+  <a href="#s3" data-slide="s3"></a>
+  <a href="#s4" data-slide="s4"></a>
+</nav>
+
+<script>
+// Highlight active nav dot on scroll
+const sections = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.nav a');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      dots.forEach(d => d.classList.remove('active'));
+      const dot = document.querySelector(`.nav a[data-slide="${e.target.id}"]`);
+      if (dot) dot.classList.add('active');
+    }
+  });
+}, { threshold: 0.5 });
+
+sections.forEach(s => observer.observe(s));
+dots[0]?.classList.add('active');
+</script>
+
+</body>
+</html>
