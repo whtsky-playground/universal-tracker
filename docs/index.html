@@ -739,7 +739,7 @@ const MILESTONES=[
   {pct:100,icon:'🏆',label:'回本成功'}
 ];
 
-// Achievement definitions (computable from [{"name": "入园", "date": "2026-03-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}, {"name": "餐饮", "date": "2026-02-08", "type": "🍔 餐饮", "original": 40, "paid": 40, "saved": 0}, {"name": "功夫熊猫吊杠", "date": "2026-02-08", "type": "🎪 活动/福利", "original": 40, "paid": 40, "saved": 0}, {"name": "停车", "date": "2026-02-08", "type": "🅿️ 停车", "original": 50, "paid": 50, "saved": 0}, {"name": "入园", "date": "2026-02-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}])
+// Achievement definitions (computable from [{"name": "餐饮", "date": "2026-03-08", "type": "🍔 餐饮", "original": 190.13, "paid": 190.13, "saved": 0.0}, {"name": "入园", "date": "2026-03-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}, {"name": "餐饮", "date": "2026-02-08", "type": "🍔 餐饮", "original": 40, "paid": 40, "saved": 0}, {"name": "功夫熊猫吊杠", "date": "2026-02-08", "type": "🎪 活动/福利", "original": 40, "paid": 40, "saved": 0}, {"name": "停车", "date": "2026-02-08", "type": "🅿️ 停车", "original": 50, "paid": 50, "saved": 0}, {"name": "入园", "date": "2026-02-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}])
 const ACHIEVEMENTS=[
   {id:'first',icon:'🎫',name:'首次入园',check:(v,s)=>v.length>=1,dateFrom:(v)=>v[0]?.date},
   {id:'five',icon:'⭐',name:'五次常客',check:(v,s)=>v.length>=5,dateFrom:(v)=>v[4]?.date},
@@ -1513,7 +1513,7 @@ function render(records){
   if(done)setTimeout(confetti,800);
 }
 
-const DATA=[{"name": "入园", "date": "2026-03-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}, {"name": "餐饮", "date": "2026-02-08", "type": "🍔 餐饮", "original": 40, "paid": 40, "saved": 0}, {"name": "功夫熊猫吊杠", "date": "2026-02-08", "type": "🎪 活动/福利", "original": 40, "paid": 40, "saved": 0}, {"name": "停车", "date": "2026-02-08", "type": "🅿️ 停车", "original": 50, "paid": 50, "saved": 0}, {"name": "入园", "date": "2026-02-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}];
+const DATA=[{"name": "餐饮", "date": "2026-03-08", "type": "🍔 餐饮", "original": 190.13, "paid": 190.13, "saved": 0.0}, {"name": "入园", "date": "2026-03-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}, {"name": "餐饮", "date": "2026-02-08", "type": "🍔 餐饮", "original": 40, "paid": 40, "saved": 0}, {"name": "功夫熊猫吊杠", "date": "2026-02-08", "type": "🎪 活动/福利", "original": 40, "paid": 40, "saved": 0}, {"name": "停车", "date": "2026-02-08", "type": "🅿️ 停车", "original": 50, "paid": 50, "saved": 0}, {"name": "入园", "date": "2026-02-08", "type": "🎢 入园", "original": 300, "paid": 0, "saved": 300}];
 render(DATA);
 </script>
 </body>
