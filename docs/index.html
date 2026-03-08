@@ -761,22 +761,23 @@ function fmtShortDate(d){
   const dt=new Date(d+'T00:00:00');
   return`${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
 }
-function fmtMoney(v){return v>=0?'+¥'+v:'-¥'+Math.abs(v)}
+function r2(v){return Math.round(v*100)/100}
+function fmtMoney(v){v=r2(v);return v>=0?'+¥'+v.toFixed(2):'-¥'+Math.abs(v).toFixed(2)}
 function fmtMonth(d){
   const dt=new Date(d+'T00:00:00');
   return`${dt.getFullYear()}年${dt.getMonth()+1}月`;
 }
 
-function countUp(el,target,prefix='',suffix='',duration=1200){
+function countUp(el,target,prefix='',suffix='',duration=1200,decimals=0){
   if(window.matchMedia('(prefers-reduced-motion:reduce)').matches){
-    el.textContent=prefix+target+suffix;return;
+    el.textContent=prefix+(decimals?target.toFixed(decimals):target)+suffix;return;
   }
   const start=performance.now();
   (function step(now){
     const p=Math.min((now-start)/duration,1);
     const ease=1-Math.pow(1-p,4);
-    const val=Math.round(ease*target);
-    el.textContent=prefix+val+suffix;
+    const val=ease*target;
+    el.textContent=prefix+(decimals?val.toFixed(decimals):Math.round(val))+suffix;
     if(p<1)requestAnimationFrame(step);
   })(start);
 }
@@ -980,7 +981,7 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
       let tag='';
       if(isBest)tag=' · <span style="color:#d4920a">BEST</span>';
       if(isWorst)tag=' · <span style="color:#c44040">WORST</span>';
-      infoBar.innerHTML=`${fmtDate(v.date)} · 累计 <span style="color:${v.cumNet>=COST?'var(--green)':'var(--blue)'}">¥${v.cumNet}</span> · 当日 ${v.net>=0?'+':''}¥${v.net}${tag}`;
+      infoBar.innerHTML=`${fmtDate(v.date)} · 累计 <span style="color:${v.cumNet>=COST?'var(--green)':'var(--blue)'}">¥${v.cumNet.toFixed(2)}</span> · 当日 ${v.net>=0?'+':''}¥${v.net.toFixed(2)}${tag}`;
     }else if(infoBar){
       infoBar.innerHTML='触摸查看每次入园数据';
     }
@@ -1000,13 +1001,13 @@ function drawTrendChart(canvas,visits,done,bestIdx,worstIdx){
 // RENDER
 // ============================================
 function render(records){
-  const entrySaved=records.filter(r=>r.type==='🎢 入园').reduce((s,r)=>s+r.saved,0);
-  const parkSpend=records.filter(r=>r.type!=='🎢 入园').reduce((s,r)=>s+r.paid,0);
-  const net=entrySaved-parkSpend;
-  const pct=Math.min(Math.max(net/COST*100,0),999);
+  const entrySaved=r2(records.filter(r=>r.type==='🎢 入园').reduce((s,r)=>s+r.saved,0));
+  const parkSpend=r2(records.filter(r=>r.type!=='🎢 入园').reduce((s,r)=>s+r.paid,0));
+  const net=r2(entrySaved-parkSpend);
+  const pct=r2(Math.min(Math.max(net/COST*100,0),999));
   const done=net>=COST;
-  const remaining=Math.max(COST-net,0);
-  const surplus=Math.max(net-COST,0);
+  const remaining=r2(Math.max(COST-net,0));
+  const surplus=r2(Math.max(net-COST,0));
 
   // Visit aggregation
   const visitMap={};
@@ -1018,9 +1019,9 @@ function render(records){
   });
   const visits=Object.values(visitMap).sort((a,b)=>a.date.localeCompare(b.date));
   let cum=0;
-  visits.forEach(v=>{cum+=v.saved-v.spent;v.cumNet=cum;v.net=v.saved-v.spent});
+  visits.forEach(v=>{cum+=v.saved-v.spent;v.cumNet=r2(cum);v.net=r2(v.saved-v.spent)});
   const visitCount=visits.length;
-  const avgNet=visitCount>0?net/visitCount:0;
+  const avgNet=visitCount>0?r2(net/visitCount):0;
   const needMore=avgNet>0?Math.ceil(remaining/avgNet):'∞';
 
   // Best/worst
@@ -1202,8 +1203,8 @@ function render(records){
       </div>
       <div class="overview-footer">
         ${done
-          ?`已超额 <strong style="color:var(--gold)">¥${surplus}</strong> · 每次都是纯赚`
-          :`距回本还差 <strong>¥${remaining}</strong> · 预计再去 <strong>${needMore}</strong> 次`
+          ?`已超额 <strong style="color:var(--gold)">¥${surplus.toFixed(2)}</strong> · 每次都是纯赚`
+          :`距回本还差 <strong>¥${remaining.toFixed(2)}</strong> · 预计再去 <strong>${needMore}</strong> 次`
         }
       </div>
     </div>
@@ -1272,7 +1273,7 @@ function render(records){
                     </div>
                     <div class="visit-card-right">
                       ${isBest?'<span class="visit-card-tag best">BEST</span>':''}${isWorst?'<span class="visit-card-tag worst">WORST</span>':''}
-                      <div class="visit-card-net ${v.net>=0?'pos':'neg'}">${v.net>=0?'+':''}¥${v.net}</div>
+                      <div class="visit-card-net ${v.net>=0?'pos':'neg'}">${v.net>=0?'+':''}¥${v.net.toFixed(2)}</div>
                     </div>
                   </div>
                   <div class="visit-bar-track">
@@ -1292,7 +1293,7 @@ function render(records){
                       }).join('')}
                       <div class="visit-detail-row" style="margin-top:4px;padding-top:4px;border-top:1px dashed rgba(0,0,0,.06)">
                         <div class="visit-detail-left" style="font-size:10px;color:var(--ink4)">累计进度</div>
-                        <div class="visit-detail-val" style="color:var(--ink3)">¥${v.cumNet} / ¥${COST}</div>
+                        <div class="visit-detail-val" style="color:var(--ink3)">¥${v.cumNet.toFixed(2)} / ¥${COST}</div>
                       </div>
                     </div>
                   </div>
@@ -1403,18 +1404,18 @@ function render(records){
   if(heroNumEl){
     if(done){
       // Count up surplus amount
-      countUp(heroNumEl,surplus,'','',1400);
+      countUp(heroNumEl,surplus,'','',1400,2);
     }else{
       // Count up percentage
       if(reducedMotion){
-        heroNumEl.textContent=pct.toFixed(1);
+        heroNumEl.textContent=pct.toFixed(2);
       }else{
         const start=performance.now();
         const displayPct=Math.min(pct,999);
         (function step(now){
           const p=Math.min((now-start)/1400,1);
           const ease=1-Math.pow(1-p,4);
-          heroNumEl.textContent=(ease*displayPct).toFixed(1);
+          heroNumEl.textContent=(ease*displayPct).toFixed(2);
           if(p<1)requestAnimationFrame(step);
         })(start);
       }
@@ -1423,11 +1424,11 @@ function render(records){
 
   // Overview count-ups
   const ovSaved=document.getElementById('ovSaved');
-  if(ovSaved)countUp(ovSaved,entrySaved,'¥','',1000);
+  if(ovSaved)countUp(ovSaved,entrySaved,'¥','',1000,2);
   const ovSpent=document.getElementById('ovSpent');
-  if(ovSpent)countUp(ovSpent,parkSpend,'¥','',1000);
+  if(ovSpent)countUp(ovSpent,parkSpend,'¥','',1000,2);
   const ovAvg=document.getElementById('ovAvg');
-  if(ovAvg)countUp(ovAvg,Math.round(Math.abs(avgNet)),'¥','',1000);
+  if(ovAvg)countUp(ovAvg,Math.abs(avgNet),'¥','',1000,2);
 
   // Season progress track fill + node bounce
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
